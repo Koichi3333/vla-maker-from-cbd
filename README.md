@@ -205,8 +205,8 @@ The usable form is made of two weight files. Both are derived from GR00T N1.7 (3
 - `checkpoint-47000`: the full fine-tuned checkpoint, ~12 GB without optimizer state.
 - `action_head_bf16_v12e_armH.safetensors`: the arm H action head, 3.2 GB.
 
-They are on Hugging Face at **[Koichi3333/vla-maker-from-cbd](https://huggingface.co/Koichi3333/vla-maker-from-cbd)**,
-**private for now**. Once the license review is done they will be opened, with access requiring agreement to the terms below (gated).
+They are public on Hugging Face at **[Koichi3333/vla-maker-from-cbd](https://huggingface.co/Koichi3333/vla-maker-from-cbd)**.
+To download them, log in to Hugging Face and agree to the terms below (non-commercial research or evaluation only); access is gated.
 
 The Colab scripts still read them from Google Drive under `MyDrive/VLA/VLA_1_0/`
 (`ckpt/checkpoint-47000/`, `v12e/…armH.safetensors`, `data/b3_dataset.tar`; set `DRIVE=` to change that).

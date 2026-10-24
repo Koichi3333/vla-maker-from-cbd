@@ -201,8 +201,8 @@ mocap など、ほかの出所の CBD も同じように `vla/cbd_to_lerobot.py`
 - `checkpoint-47000`: 追加学習したチェックポイント全体。optimizer の状態を除いて約 12 GB。
 - `action_head_bf16_v12e_armH.safetensors`: arm H の action head。3.2 GB。
 
-Hugging Face の **[Koichi3333/vla-maker-from-cbd](https://huggingface.co/Koichi3333/vla-maker-from-cbd)** に置いてあり、**今は非公開**です。
-ライセンスの確認が済んだら、下の利用条件への同意を求める形（gated）で公開します。
+Hugging Face の **[Koichi3333/vla-maker-from-cbd](https://huggingface.co/Koichi3333/vla-maker-from-cbd)** で公開しています。
+取るには、Hugging Face にログインして、下の利用条件（非商用の研究・評価に限る）に同意する必要があります（gated）。
 
 Colab のスクリプトは、今はまだ Google Drive の `MyDrive/VLA/VLA_1_0/` から重みを読みます
 （`ckpt/checkpoint-47000/`、`v12e/…armH.safetensors`、`data/b3_dataset.tar`。置き場所は `DRIVE=` で変えられる）。
