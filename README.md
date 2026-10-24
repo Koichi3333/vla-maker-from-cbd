@@ -45,14 +45,14 @@ Each one can be taken on by itself. Comment on (or open) an issue to claim one; 
 
 | | Problem | Why it matters | Needs a GPU? |
 | --- | --- | --- | --- |
-| 🔴 | **Make the VLA reach objects on its own.** Today the hand reaches the object precisely because an outside planner shows it the way while the model runs (inference-time guidance). Without that, the model still turns the hand toward the object, but the hand reaches it only about half as often (0.93 → 0.51) | It becomes a real VLA that works without outside help | Yes (A100, ~30 CU per try) |
-| 🔴 | **Record scenes with objects and contribute them as CBD.** Film seated or standing object handling from a fixed camera and convert it with the CBD video generator | Data is what is missing most, and only data you own leads to a model that can be used commercially | No |
-| 🟠 | **Beat "just hold the current pose" at predicting video motion (H-3).** When asked to continue clips made from video, the best error so far is 5.53°, still worse than the 5.05° of simply holding the current pose | It is the test that cannot be gamed: does the model actually predict human motion? | Yes (~1 CU) |
-| 🟠 | **Run on GPUs other than Colab.** Port `colab/vm_*.sh` to a local GPU, RunPod, Lambda or Modal | Today every run needs a browser click to connect Google Drive | Your own |
-| 🟡 | **Check with physics.** Replay the generated G1 motion in a simulator that computes contact and gravity (Isaac, MuJoCo with contacts) and report what breaks | Everything so far is kinematic (poses in sequence, no forces) | Optional |
-| 🟡 | **Add fingers.** CBD has no finger bones yet, so "holding" is a check of whether the hand is close to the object | Real grasping needs fingers | No |
-| 🟢 | **Translate log messages.** Code comments are in English, but many printed messages and command-line help texts are still in Japanese | Lowers the barrier for everyone else | No |
-| 🟢 | **Put the CPU smoke test in CI (automated tests)**, packaging, type hints | Keeps the pipeline from quietly breaking | No |
+| 🔴 | [#1](https://github.com/Koichi3333/vla-maker-from-cbd/issues/1) **Make the VLA reach objects on its own.** Today the hand reaches the object precisely because an outside planner shows it the way while the model runs (inference-time guidance). Without that, the model still turns the hand toward the object, but the hand reaches it only about half as often (0.93 → 0.51) | It becomes a real VLA that works without outside help | Yes (A100, ~30 CU per try) |
+| 🔴 | [#2](https://github.com/Koichi3333/vla-maker-from-cbd/issues/2) **Record scenes with objects and contribute them as CBD.** Film seated or standing object handling from a fixed camera and convert it with the CBD video generator | Data is what is missing most, and only data you own leads to a model that can be used commercially | No |
+| 🟠 | [#3](https://github.com/Koichi3333/vla-maker-from-cbd/issues/3) **Beat "just hold the current pose" at predicting video motion (H-3).** When asked to continue clips made from video, the best error so far is 5.53°, still worse than the 5.05° of simply holding the current pose | It is the test that cannot be gamed: does the model actually predict human motion? | Yes (~1 CU) |
+| 🟠 | [#4](https://github.com/Koichi3333/vla-maker-from-cbd/issues/4) **Run on GPUs other than Colab.** Port `colab/vm_*.sh` to a local GPU, RunPod, Lambda or Modal | Today every run needs a browser click to connect Google Drive | Your own |
+| 🟡 | [#5](https://github.com/Koichi3333/vla-maker-from-cbd/issues/5) **Check with physics.** Replay the generated G1 motion in a simulator that computes contact and gravity (Isaac, MuJoCo with contacts) and report what breaks | Everything so far is kinematic (poses in sequence, no forces) | Optional |
+| 🟡 | [#6](https://github.com/Koichi3333/vla-maker-from-cbd/issues/6) **Add fingers.** CBD has no finger bones yet, so "holding" is a check of whether the hand is close to the object | Real grasping needs fingers | No |
+| 🟢 | [#7](https://github.com/Koichi3333/vla-maker-from-cbd/issues/7) **Translate log messages.** Code comments are in English, but many printed messages and command-line help texts are still in Japanese | Lowers the barrier for everyone else | No |
+| 🟢 | [#8](https://github.com/Koichi3333/vla-maker-from-cbd/issues/8) **Put the CPU smoke test in CI (automated tests)**, packaging, type hints | Keeps the pipeline from quietly breaking | No |
 
 New to the project? Run the [CPU smoke test](#1-cpu-smoke-test-no-gpu-no-weights) first, then pick a 🟢 item.
 
