@@ -1,0 +1,169 @@
+{
+ "codebase_version": "v2.0",
+ "robot_type": "cbd_humanoid",
+ "total_episodes": 671,
+ "total_frames": 39361,
+ "total_tasks": 19,
+ "total_chunks": 1,
+ "chunks_size": 1000,
+ "fps": 20.0,
+ "data_path": "data/chunk-{episode_chunk:03d}/episode_{episode_index:06d}.parquet",
+ "features": {
+  "observation.state": {
+   "dtype": "float32",
+   "shape": [
+    117
+   ],
+   "names": [
+    "root_translation",
+    "hips",
+    "torso",
+    "left_arm",
+    "right_arm",
+    "left_leg",
+    "right_leg"
+   ]
+  },
+  "action": {
+   "dtype": "float32",
+   "shape": [
+    117
+   ],
+   "names": [
+    "root_translation",
+    "hips",
+    "torso",
+    "left_arm",
+    "right_arm",
+    "left_leg",
+    "right_leg"
+   ]
+  },
+  "timestamp": {
+   "dtype": "float64",
+   "shape": [
+    1
+   ]
+  },
+  "frame_index": {
+   "dtype": "int64",
+   "shape": [
+    1
+   ]
+  },
+  "episode_index": {
+   "dtype": "int64",
+   "shape": [
+    1
+   ]
+  },
+  "index": {
+   "dtype": "int64",
+   "shape": [
+    1
+   ]
+  },
+  "task_index": {
+   "dtype": "int64",
+   "shape": [
+    1
+   ]
+  },
+  "annotation.human.task_description": {
+   "dtype": "int64",
+   "shape": [
+    1
+   ]
+  },
+  "next.done": {
+   "dtype": "bool",
+   "shape": [
+    1
+   ]
+  }
+ },
+ "cbd": {
+  "action_space": "CBD bone rotations, 6D continuous representation",
+  "layout": {
+   "root_translation": [
+    0,
+    3
+   ],
+   "hips": [
+    3,
+    9
+   ],
+   "torso": [
+    9,
+    33
+   ],
+   "left_arm": [
+    33,
+    57
+   ],
+   "right_arm": [
+    57,
+    81
+   ],
+   "left_leg": [
+    81,
+    99
+   ],
+   "right_leg": [
+    99,
+    117
+   ]
+  },
+  "bones": [
+   "hips",
+   "spine",
+   "chest",
+   "neck",
+   "head",
+   "left_shoulder",
+   "left_upper_arm",
+   "left_lower_arm",
+   "left_hand",
+   "right_shoulder",
+   "right_upper_arm",
+   "right_lower_arm",
+   "right_hand",
+   "left_upper_leg",
+   "left_lower_leg",
+   "left_foot",
+   "right_upper_leg",
+   "right_lower_leg",
+   "right_foot"
+  ],
+  "rest_pose": "T-pose",
+  "coordinate_system": "y-up, right-handed, person faces +z",
+  "source": "自前の動画（iPhone、固定カメラ）→ video_cbd/video_to_cbd.py の CBD",
+  "root_translation": "0 固定（F-3。動画からは世界での移動を復元できない）",
+  "objects": "state / action には入れない。objects/episode_XXXXXX.json にフレームごとの状態だけ（位置はレンダの手に合わせる。render_with_objects.py）",
+  "captions": "撮影者が付けたファイル名から作った英文（video_to_lerobot.py の CAPTIONS）",
+  "smpl_used": true,
+  "license_note": "胴は SMPL（ROMP）で解いた値。SMPL の利用条件（非商用・再配布不可）が及ぶ",
+  "split": "meta/split.json（train = 調整用 + 既存の実写、heldout = 採点用）",
+  "skipped": [
+   {
+    "clip": "handheld_side_view_drink_from_glass_2261",
+    "why": "品質ゲートで fail"
+   },
+   {
+    "clip": "sample",
+    "why": "外部の見本"
+   },
+   {
+    "clip": "seated_slide_glass_far_and_back_2242",
+    "why": "品質ゲートで fail"
+   },
+   {
+    "clip": "table_closeup_drink_from_glass_2260",
+    "why": "品質ゲートで fail"
+   }
+  ],
+  "video_pattern": "render_with_objects",
+  "synthetic": "train に V-12 の誘導つき閉ループ（arm B + fk 誘導）で作った動きを足した（video_cbd/v12_rollouts_to_lerobot.py）。**モデルの生成で実測ではない**。episodes.jsonl の synthetic に条件・ずらし・掴んだ手・付けたフレーム",
+  "synthetic_source": "ws/lerobot_video"
+ }
+}

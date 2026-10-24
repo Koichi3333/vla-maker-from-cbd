@@ -1,0 +1,67 @@
+{
+ "state": {
+  "root_translation": {
+   "start": 0,
+   "end": 3
+  },
+  "hips": {
+   "start": 3,
+   "end": 9
+  },
+  "torso": {
+   "start": 9,
+   "end": 33
+  },
+  "left_arm": {
+   "start": 33,
+   "end": 57
+  },
+  "right_arm": {
+   "start": 57,
+   "end": 81
+  },
+  "left_leg": {
+   "start": 81,
+   "end": 99
+  },
+  "right_leg": {
+   "start": 99,
+   "end": 117
+  }
+ },
+ "action": {
+  "root_translation": {
+   "start": 0,
+   "end": 3
+  },
+  "hips": {
+   "start": 3,
+   "end": 9
+  },
+  "torso": {
+   "start": 9,
+   "end": 33
+  },
+  "left_arm": {
+   "start": 33,
+   "end": 57
+  },
+  "right_arm": {
+   "start": 57,
+   "end": 81
+  },
+  "left_leg": {
+   "start": 81,
+   "end": 99
+  },
+  "right_leg": {
+   "start": 99,
+   "end": 117
+  }
+ },
+ "annotation": {
+  "human.task_description": {
+   "original_key": "annotation.human.task_description"
+  }
+ }
+}

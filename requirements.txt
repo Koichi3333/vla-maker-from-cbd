@@ -1,0 +1,10 @@
+# Codespace / laptop side: data conversion, rendering, guidance, CPU smoke test, VLM goals.
+# GR00T itself is installed on the GPU VM by colab/setup_vm.sh, not from here.
+numpy>=1.24
+mujoco>=3.0
+imageio>=2.31
+imageio-ffmpeg>=0.4
+pyarrow>=14
+opencv-python-headless>=4.8   # vla/vlm_target.py
+torch>=2.2                    # tests/smoke_test.py (CPU build is enough)
+transformers>=4.40            # tests/smoke_test.py (BatchFeature)

@@ -1,0 +1,43 @@
+Licensed by NVIDIA Corporation under the NVIDIA Open Model License
+
+Built on NVIDIA Cosmos
+
+
+vla-maker-from-cbd — derivative models of NVIDIA Isaac GR00T N1.7
+==================================================================
+
+This repository distributes the following derivative models of NVIDIA GR00T N1.7
+(https://huggingface.co/nvidia/GR00T-N1.7-3B):
+
+  checkpoint-47000/                 GR00T N1.7-3B with its action head fine-tuned on Common Behavior Data
+                                    derived from HumanML3D. The vision-language backbone (NVIDIA Cosmos-Reason2-2B)
+                                    was frozen during training and is unchanged from GR00T N1.7.
+  action_heads/arm_H.safetensors    An action head further fine-tuned from checkpoint-47000.
+
+Licenses of the base model
+--------------------------
+GR00T N1.7 is presented on its model card as released under the NVIDIA Open Model License Agreement
+(copy: LICENSE-NVIDIA-Open-Model-License-2025-10-24.pdf). The LICENSE file distributed with GR00T N1.7
+is the NVIDIA License (copy, unmodified: LICENSE-NVIDIA-GR00T-N1.7.txt). These derivative models are
+distributed in compliance with both.
+
+Additional terms for these derivative models
+--------------------------------------------
+(Section 3.3 of the NVIDIA Open Model License; Section 3.2 of the NVIDIA License)
+
+1. Use limitation. These derivative models may be used or intended for use non-commercially only,
+   that is, for research or evaluation purposes only. This also reflects the terms of the training data below.
+2. The derivative models subject to these terms are exactly the files listed above.
+3. Use must be consistent with NVIDIA's Trustworthy AI terms
+   (https://www.nvidia.com/en-us/agreements/trustworthy-ai/terms/).
+
+Training data
+-------------
+- HumanML3D (built on AMASS): motion and text annotations used for training. Distributed by their authors
+  for non-commercial research. The data itself is not included here.
+- SMPL body model: used to fit the torso of the video-derived clips. Licensed for non-commercial use.
+  The SMPL model itself is not included here.
+- Video-derived clips recorded by the author (skeletons and object states only; no images).
+
+Copyright (c) 2026 Koichi/Common Behavior Data for the modifications (fine-tuned action heads).
+NVIDIA and GR00T are trademarks of NVIDIA Corporation; they are used here only to describe the origin of the model.

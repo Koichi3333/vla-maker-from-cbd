@@ -1,0 +1,114 @@
+[
+ {
+  "slug": "ep02",
+  "clip": "real",
+  "rollouts": 52,
+  "kept": 47,
+  "trim_after_sec": 1.0,
+  "attach_median": 19.0
+ },
+ {
+  "slug": "ep02m",
+  "clip": "real_mirror",
+  "rollouts": 52,
+  "kept": 41,
+  "trim_after_sec": 1.0,
+  "attach_median": 32.0
+ },
+ {
+  "slug": "ep03",
+  "clip": "seated_drink_from_glass_2236",
+  "rollouts": 52,
+  "kept": 49,
+  "trim_after_sec": 1.0,
+  "attach_median": 32.0
+ },
+ {
+  "slug": "ep03m",
+  "clip": "seated_drink_from_glass_2236_mirror",
+  "rollouts": 52,
+  "kept": 44,
+  "trim_after_sec": 1.0,
+  "attach_median": 32.0
+ },
+ {
+  "slug": "ep04",
+  "clip": "seated_drink_from_water_bottle_2238",
+  "rollouts": 52,
+  "kept": 42,
+  "trim_after_sec": 1.0,
+  "attach_median": 39.5
+ },
+ {
+  "slug": "ep04m",
+  "clip": "seated_drink_from_water_bottle_2238_mirror",
+  "rollouts": 52,
+  "kept": 47,
+  "trim_after_sec": 1.0,
+  "attach_median": 39.0
+ },
+ {
+  "slug": "ep05",
+  "clip": "seated_move_glass_far_and_back_2244",
+  "rollouts": 52,
+  "kept": 49,
+  "trim_after_sec": 1.0,
+  "attach_median": 20.0
+ },
+ {
+  "slug": "ep05m",
+  "clip": "seated_move_glass_far_and_back_2244_mirror",
+  "rollouts": 52,
+  "kept": 49,
+  "trim_after_sec": 1.0,
+  "attach_median": 25.0
+ },
+ {
+  "slug": "ep06",
+  "clip": "seated_pick_up_and_look_at_smartphone_2240",
+  "rollouts": 52,
+  "kept": 48,
+  "trim_after_sec": 1.0,
+  "attach_median": 26.5
+ },
+ {
+  "slug": "ep06m",
+  "clip": "seated_pick_up_and_look_at_smartphone_2240_mirror",
+  "rollouts": 52,
+  "kept": 44,
+  "trim_after_sec": 1.0,
+  "attach_median": 23.5
+ },
+ {
+  "slug": "ep09",
+  "clip": "standing_ball_overhead_and_toss_between_hands_2248",
+  "rollouts": 52,
+  "kept": 43,
+  "trim_after_sec": 1.0,
+  "attach_median": 38.0
+ },
+ {
+  "slug": "ep09m",
+  "clip": "standing_ball_overhead_and_toss_between_hands_2248_mirror",
+  "rollouts": 52,
+  "kept": 47,
+  "trim_after_sec": 1.0,
+  "attach_median": 26.0
+ },
+ {
+  "slug": "ep10",
+  "clip": "standing_pick_up_ball_raise_overhead_and_return_2246",
+  "rollouts": 52,
+  "kept": 47,
+  "trim_after_sec": 1.0,
+  "attach_median": 20.0
+ },
+ {
+  "slug": "ep10m",
+  "clip": "standing_pick_up_ball_raise_overhead_and_return_2246_mirror",
+  "rollouts": 52,
+  "kept": 50,
+  "trim_after_sec": 1.0,
+  "attach_median": 20.5
+ }
+]
