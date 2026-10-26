@@ -7,10 +7,11 @@ Right: one trial of the VLA's closed-loop evaluation (drawn as in tools/make_rea
 
     gh api repos/Koichi3333/common-behavior-data/contents/examples/human-capture/sample_output/01_mediapipe_overlay/mediapipe_overlay.mp4 \
         -H 'Accept: application/vnd.github.raw' > work/cbd/mediapipe_overlay.mp4
-    MUJOCO_GL=osmesa python3 tools/make_hero_gif.py work/cbd/mediapipe_overlay.mp4 work/v10b/evalV_box/h2/traj_2237.npz
+    MUJOCO_GL=osmesa python3 tools/make_hero_gif.py work/cbd/mediapipe_overlay.mp4 work/v10b/evalV_box/h2/traj_2237.npz --grip 0.10 0 0.04
 
 The right side defaults to scene 2237 (pick up a glass, drink, put it back), second "shifted" trial (trial 5). Of this scene's 12 trials,
 it is the only one that brings the glass to the mouth (closest to the head 0.227 m; the recorded human clip of the same scene gets 0.203 m). Both sides play in real time at 10 fps.
+--grip draws the glass in the curl of the fingers (palm side) instead of at the midpoint of wrist and finger base, where it covered the back of the hand. Drawing only.
 The right side is smoothed with vla/smooth_motion.py by default (the hand jitters at chunk seams; hand jitter while lifting drops from 1.29 to 0.79 cm on average).
 """
 import argparse
@@ -43,6 +44,8 @@ def main():
     ap.add_argument("--fps", type=int, default=10)
     ap.add_argument("--labels", nargs=2, default=["Human video → CBD", "VLA on CBD → MuJoCo"])
     ap.add_argument("--color", default=DEFAULT_COLOR)
+    ap.add_argument("--grip", type=float, nargs=3, default=None, metavar=("ALONG", "ACROSS", "PALM"),
+                    help="draw the glass in the curl of the fingers: offset from the wrist in the hand's frame (m), e.g. 0.10 0 0.04")
     ap.add_argument("--raw", action="store_true", help="右を均さずに描く（既定は vla/smooth_motion.py で均す）")
     ap.add_argument("--out", default=str(ROOT / "docs/media/hero_video_to_vla.gif"))
     a = ap.parse_args()
@@ -53,7 +56,7 @@ def main():
     W = round(H * vid.shape[2] / vid.shape[1])        # Left width (keeps portrait). The right side is cropped to the same width
 
     z, label, scene = load_scene(a.traj, a.color, H)
-    sim = render_trial(z, label, scene, a.trial, a.end, 20 // a.fps, smooth=not a.raw)
+    sim = render_trial(z, label, scene, a.trial, a.end, 20 // a.fps, smooth=not a.raw, grip=a.grip)
     bright = sim.max(axis=3) > 150                    # body and object (brighter than the floor and background)
     xs = np.nonzero(bright.any(axis=(0, 1)))[0]
     cx = int(np.clip((xs.min() + xs.max()) // 2, W // 2, H - W // 2))
