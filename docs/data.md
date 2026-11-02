@@ -12,7 +12,7 @@ the official routes**. It is a reading of the license texts, not legal advice.
 | **HumanAct12** (via HumanML3D) | 363 clips | Distributed openly by its authors ([action-to-motion](https://github.com/EricGuo5513/action-to-motion), MIT repository) | Included in the HumanML3D repository (`pose_data/`) |
 | **HumanML3D** text annotations and scripts | Captions, clip list, the conversion scripts | MIT repository. Its authors do not distribute the motion data itself, because AMASS's policy forbids it | [EricGuo5513/HumanML3D](https://github.com/EricGuo5513/HumanML3D) |
 | **SMPL** body model | Fitting the torso of the video-derived clips (ROMP) | Non-commercial; derivative works allowed; the model itself may not be redistributed; training for commercial use prohibited. Cite the SMPL paper | [smpl.is.tue.mpg.de](https://smpl.is.tue.mpg.de) (registration and acceptance) |
-| Author's own videos | 13 real clips in `data/video_reach/` | Recorded by the author, who is the only person in them. Only skeletons and object states are stored | — |
+| Author's own videos | 24 real clips in `data/video_reach/` (13 train, 11 held out) | Recorded by the author, who is the only person in them. Only skeletons and object states are stored | — |
 
 **What this means for you**
 

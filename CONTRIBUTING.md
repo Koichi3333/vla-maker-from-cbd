@@ -32,9 +32,10 @@ Useful clips:
 - **The same action with the object in different places** (left, right, near, far, high). This is exactly what the model needs to learn "go where the object is".
 - 5 to 15 seconds each, one person in frame, real recordings only (no generated video; the pipeline rejects it on purpose).
 
-Convert them with the video generator in
-[common-behavior-data](https://github.com/Koichi3333/common-behavior-data) and open a PR or an issue with
-a link. **Only submit recordings you have the rights to, of people who agreed to it.** State the license
+Convert them with the human-capture notebook in
+[common-behavior-data](https://github.com/Koichi3333/common-behavior-data) (steps: "Bring your own CBD" in the
+[README](README.md)) and open a PR or an issue with a link. The notebook's zip also holds your original video
+(`source/`) and frames (`timeline/frames/`); remove them if you do not want to share them. **Only submit recordings you have the rights to, of people who agreed to it.** State the license
 you grant (we suggest CC BY 4.0). We store skeletons and object states, never the original frames.
 
 ### 4. Run an experiment (GPU)

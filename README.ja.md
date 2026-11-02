@@ -4,6 +4,8 @@
 
 **人の動きのデータ（CBD）から、ヒューマノイドを動かす AI（VLA）を作る。**
 
+[![smoke-test](https://github.com/Koichi3333/vla-maker-from-cbd/actions/workflows/smoke-test.yml/badge.svg)](https://github.com/Koichi3333/vla-maker-from-cbd/actions/workflows/smoke-test.yml)
+
 [English](README.md) · [結果（詳細）](docs/results.ja.md) · [参加の仕方](CONTRIBUTING.ja.md) · [Common Behavior Data](https://github.com/Koichi3333/common-behavior-data)
 
 <img src="docs/media/hero_video_to_vla.gif" width="544" alt="左: 椅子に座った人がテーブルのグラスに手を伸ばして飲む動画に、捉えた骨格を重ねたもの。右: VLA が動かすシミュレーションの人型が、マゼンタのグラスに手を伸ばして口元へ運ぶ">
@@ -174,9 +176,12 @@ ACTION_HEAD=runs/t1/action_head.safetensors bash colab/go.sh infer ...   # 学�
 
 ### 4. 自分の CBD を持ち込む
 
-1. clip を撮り、[common-behavior-data](https://github.com/Koichi3333/common-behavior-data) の動画生成器で CBD にする。
-2. `python3 vla/video_to_lerobot.py --cbd-dir <CBD のディレクトリ> --out work/my_video` を実行する。117 次元の LeRobot データと、フレームごとの物の状態が書かれる。
-3. `VIDEO_DATA=work/my_video bash colab/start.sh train ...` で学習する。
+1. clip を撮り、[common-behavior-data](https://github.com/Koichi3333/common-behavior-data) の human-capture ノートブック（`examples/human-capture`）を回す。キャプションを付けるには Colab の秘密 `GEMINI_API_KEY` を設定する。設定しない場合は手順 3 で自分で書く。
+2. `demo2_output_bundle.zip` を 1 本ずつ別のフォルダへ展開する。フォルダ名が clip の名前になる: `unzip demo2_output_bundle.zip -d work/my_clips/IMG_0001`
+3. `python3 vla/video_to_lerobot.py --cbd-dir work/my_clips --out work/my_video` を実行する。117 次元の LeRobot データが書かれ、外した clip とその理由が表示される。理由は、キャプションが無い（`--caption "IMG_0001=a person waves."` で足す）か、骨格を捉えられたフレームが 90% 未満（`--min-pose-coverage`）のどちらか。
+4. `VIDEO_DATA=work/my_video bash colab/start.sh train ...` で学習する。
+
+ノートブックの出力にはどちらの手が物を持っているかの情報が無いので、これらの clip には物の状態が付かず、キャプションに物が出てきても描画した動画に物は映りません。展開した `source/` には元の動画が入っています。変換では読まないので、誤ってコミットや共有をしないでください。
 
 mocap など、ほかの出所の CBD も同じように `vla/cbd_to_lerobot.py` を通せます。
 
@@ -186,7 +191,7 @@ mocap など、ほかの出所の CBD も同じように `vla/cbd_to_lerobot.py`
 | --- | --- |
 | `vla/` | 動くものすべて。CBD ↔ LeRobot の変換、描画、GR00T の modality config、評価、誘導、VLM の目標 |
 | `colab/` | `start.sh` / `go.sh`（Codespace 側）、`vm_train.sh` / `vm_infer.sh` / `vm_data.sh`（VM 側）、`watch.sh`、`autostop.sh` |
-| `data/video_reach/` | 物つきの学習データ。実写 13 本（作者の動画）＋ 誘導して作った合成 658 本（うち 11 本は評価用に取り分け）、計 671 本。画像は含まない |
+| `data/video_reach/` | 物つきのデータ。実写 24 本（作者の動画。学習 13 本、評価用に取り分けた 11 本）＋ 誘導して作った合成 647 本、計 671 本。画像は含まない |
 | `data/eval/` | 評価の仕様。評価用の 7 場面・学習側の 7 場面・VLM が選んだ目標 |
 | `data/stats/` | `checkpoint-47000` の正規化の統計（誘導と通しテストが使う） |
 | `tools/` | Colab の補助（CU 残高・セッションの付け直し・Secret・pty の包み）・Hugging Face のメタデータ・README の GIF |

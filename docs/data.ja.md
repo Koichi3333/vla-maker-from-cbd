@@ -11,7 +11,7 @@
 | **HumanAct12**（HumanML3D 経由） | 363 本 | 作者が公開で配っている（[action-to-motion](https://github.com/EricGuo5513/action-to-motion)、MIT のリポジトリ） | HumanML3D のリポジトリに同梱（`pose_data/`） |
 | **HumanML3D** のテキスト注釈とスクリプト | キャプション・一覧・変換のスクリプト | MIT のリポジトリ。動きのデータそのものは、AMASS の方針で配れないため作者も配っていない | [EricGuo5513/HumanML3D](https://github.com/EricGuo5513/HumanML3D) |
 | **SMPL** の人体モデル | 動画由来の clip の胴の当てはめ（ROMP） | 非商用。派生物の作成は可、本体の再配布は不可、商用目的の学習は不可。SMPL の論文の引用が義務 | [smpl.is.tue.mpg.de](https://smpl.is.tue.mpg.de)（登録と同意） |
-| 作者の動画 | `data/video_reach/` の実写 13 本 | 作者が撮影し、写っているのは作者だけ。保存しているのは骨格と物の状態だけ | — |
+| 作者の動画 | `data/video_reach/` の実写 24 本（学習 13 本、採点 11 本） | 作者が撮影し、写っているのは作者だけ。保存しているのは骨格と物の状態だけ | — |
 
 **使う人にとっての意味**
 

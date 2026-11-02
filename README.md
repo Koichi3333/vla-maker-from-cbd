@@ -4,6 +4,8 @@
 
 **Build an AI model that moves a humanoid (a VLA) from human motion data (CBD).**
 
+[![smoke-test](https://github.com/Koichi3333/vla-maker-from-cbd/actions/workflows/smoke-test.yml/badge.svg)](https://github.com/Koichi3333/vla-maker-from-cbd/actions/workflows/smoke-test.yml)
+
 [日本語](README.ja.md) · [Results](docs/results.md) · [Contributing](CONTRIBUTING.md) · [Common Behavior Data](https://github.com/Koichi3333/common-behavior-data)
 
 <img src="docs/media/hero_video_to_vla.gif" width="544" alt="Left: a person on a chair reaches for a glass on a table and drinks, with the tracked skeleton overlaid. Right: the simulated humanoid driven by the VLA reaches for a magenta glass and brings it to its mouth">
@@ -176,11 +178,19 @@ ACTION_HEAD=runs/t1/action_head.safetensors bash colab/go.sh infer ...   # evalu
 
 ### 4. Bring your own CBD
 
-1. Record a clip and convert it with the CBD video generator in
-   [common-behavior-data](https://github.com/Koichi3333/common-behavior-data).
-2. Run `python3 vla/video_to_lerobot.py --cbd-dir <your CBD dir> --out work/my_video`. It writes the 117-d
-   LeRobot dataset plus per-frame object states.
-3. Train with `VIDEO_DATA=work/my_video bash colab/start.sh train ...`.
+1. Record a clip and run the human-capture notebook in
+   [common-behavior-data](https://github.com/Koichi3333/common-behavior-data) (`examples/human-capture`).
+   Add the Colab secret `GEMINI_API_KEY` to get captions; without it, write them yourself in step 3.
+2. Unzip each `demo2_output_bundle.zip` into its own folder. The folder name becomes the clip name:
+   `unzip demo2_output_bundle.zip -d work/my_clips/IMG_0001`
+3. Run `python3 vla/video_to_lerobot.py --cbd-dir work/my_clips --out work/my_video`. It writes the 117-d
+   LeRobot dataset and prints every clip it left out and why: no caption (add `--caption "IMG_0001=a person waves."`)
+   or a pose found in under 90% of the frames (`--min-pose-coverage`).
+4. Train with `VIDEO_DATA=work/my_video bash colab/start.sh train ...`.
+
+The notebook does not say which hand holds an object, so these clips get no object states and no object is drawn in
+their rendered video, even when the caption mentions one. The unzipped `source/` folder holds your original video;
+the converter does not read it, so do not commit or share it by accident.
 
 Mocap or any other CBD source goes through `vla/cbd_to_lerobot.py` the same way.
 
@@ -190,7 +200,7 @@ Mocap or any other CBD source goes through `vla/cbd_to_lerobot.py` the same way.
 | --- | --- |
 | `vla/` | Everything that runs: CBD ↔ LeRobot conversion, rendering, the GR00T modality config, evaluation, guidance, VLM goals |
 | `colab/` | `start.sh` / `go.sh` (Codespace side), `vm_train.sh` / `vm_infer.sh` / `vm_data.sh` (VM side), `watch.sh`, `autostop.sh` |
-| `data/video_reach/` | Object-bearing training clips: 13 real (the author's own videos) + 658 synthetic reaches made with guidance (11 kept aside for evaluation), 671 episodes, no images |
+| `data/video_reach/` | Object-bearing clips: 24 real (the author's own videos; 13 train, 11 kept aside for evaluation) + 647 synthetic reaches made with guidance, 671 episodes, no images |
 | `data/eval/` | Evaluation specs: the 7 evaluation scenes, 7 training-side scenes, the goals the VLM picked |
 | `data/stats/` | Normalization statistics of `checkpoint-47000` (used by guidance and the smoke test) |
 | `tools/` | Colab helpers (CU balance, session re-attach, secrets, pty wrapper), Hugging Face metadata, the README GIFs |

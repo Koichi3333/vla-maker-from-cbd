@@ -58,7 +58,12 @@ def test_head():
     print("経路の動き（フレーム間 cm）:", np.round(np.linalg.norm(np.diff(np.vstack([now, path]), axis=0), axis=1) * 100, 1))
     prev = gg.CTX["last_norm"]
     x2, h2 = run(4, prev)
-    print("重ね 4: 先頭 4 フレームが前のチャンクの 12〜15 と一致:", np.allclose(x2[:4, 3:], prev[0, 12:16, 3:], atol=1e-5))
+    overlap_ok = np.allclose(x2[:4, 3:], prev[0, 12:16, 3:], atol=1e-5)
+    print("重ね 4: 先頭 4 フレームが前のチャンクの 12〜15 と一致:", overlap_ok)
+    # CI gate: guidance pulls the hand onto the path (0.178 m before), and the chunk seam stays continuous
+    assert float(np.max(gg.STATS["err_after"])) < 1e-3, gg.STATS["err_after"]
+    assert float(np.max(gg.STATS["err_before"])) > 0.05, gg.STATS["err_before"]
+    assert overlap_ok
 
 
 def test_rollout():
@@ -122,6 +127,14 @@ def test_rollout():
     print(sorted(p.name for p in out.rglob("*") if p.is_file())[:12])
     for f in sorted(out.glob("traj_*.npz")):
         z = np.load(f); print(f.name, {k: z[k].shape for k in z.files}, "attach", z["attach"].tolist())
+    # CI gate: both scenes ran all 5 conditions for 60 frames, wrote a video each, and the object got attached at least once
+    trajs = sorted(out.glob("traj_*.npz"))
+    assert len(trajs) == len(spec["items"]) == 2, trajs
+    assert len(d["rows"]) > 0 and len(list(out.rglob("*.mp4"))) >= 2 * len(trajs)
+    for f in trajs:
+        z = np.load(f)
+        assert z["traj"].shape == (5, 60, 117) and np.isfinite(z["traj"]).all(), f
+        assert (z["attach"] >= 0).any(), f"{f.name}: the object was never attached"
 
 
 if __name__ == "__main__":

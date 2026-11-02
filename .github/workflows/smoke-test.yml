@@ -1,0 +1,36 @@
+name: smoke-test
+
+# CPU-only end-to-end check of inference-time guidance and the closed-loop evaluation (no GPU, no weights).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MUJOCO_GL: osmesa
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install software OpenGL
+        run: sudo apt-get update && sudo apt-get install -y libosmesa6
+      - name: Install requirements (CPU build of torch)
+        run: pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Guidance head test
+        run: python3 tests/smoke_test.py head
+      - name: Closed-loop rollout test
+        run: python3 tests/smoke_test.py rollout
+      - name: Keep the rollout videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-rollout
+          path: work/smoke/object
+          retention-days: 7

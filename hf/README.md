@@ -115,8 +115,8 @@ and its generated walking retargets to a Unitree G1 through the CBD adapter. Ful
 - **HumanML3D** (built on AMASS, plus 363 HumanAct12 clips): standing subset, converted to CBD and rendered.
   AMASS motion data is not redistributed here; to rebuild the training data, obtain AMASS yourself and follow
   [docs/data.md](https://github.com/Koichi3333/vla-maker-from-cbd/blob/main/docs/data.md).
-- **Object-bearing clips from video:** 13 real clips recorded by the author (MediaPipe, SMPL via ROMP, SAM 2),
-  plus 658 synthetic reaches from guided closed-loop rollouts. Included in the code repository as `data/video_reach/`.
+- **Object-bearing clips from video:** 24 real clips recorded by the author (13 train, 11 held out; MediaPipe, SMPL via ROMP, SAM 2),
+  plus 647 synthetic reaches from guided closed-loop rollouts. Included in the code repository as `data/video_reach/`.
 
 ## Citation
 

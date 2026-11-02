@@ -7,16 +7,23 @@
   `objects/episode_XXXXXX.json` (GR00T's loader reads only data/ and meta/):
   `held_left` / `held_right` / `held_both` (phase is Grasp / Carry and the object is visible), `hidden` (flying away from the hand = `tracked_2d`),
   `rest` (everything else, including `hidden` shorter than 0.25 s). **No positions are stored.** The object is placed relative to the rendered hand (`render_with_objects.py`)
-- **Clips that `fail` the quality gate are left out.** The external example (`sample`) is left out too (the subject's consent is unknown)
-- **Tuning and scoring sets are separate** (V-5's H-3 is measured on the scoring set). `train` / `heldout` in `meta/split.json`
-- Captions are **English sentences made from the file names the recorder gave** (`CAPTIONS`), not generated text
+  Clips from the CBD human-capture notebook have no `held_by`, so they get no object states (the object is not drawn)
+- **Clips that fail the quality gate are left out**: `overall_quality == "fail"`, or for the notebook's numeric quality, `pose_coverage`
+  below `--min-pose-coverage` (`overall_quality` averages in the face, which the body does not need; frames without a pose become the T-pose).
+  The external example (`sample`) is left out too (the subject's consent is unknown)
+- **Tuning and scoring sets are separate** (V-5's H-3 is measured on the scoring set). `train` / `heldout` in `meta/split.json`.
+  Only the author's clips have a scoring side; everyone else's clips are train
+- Each clip gets one caption, the first that exists: `--caption CLIP=SENTENCE`, then `CAPTIONS` (the author's clips), then CBD's optional
+  temporal captions (Gemini; windows joined in order, gendered words made neutral). **Clips with none are left out**, with the reason printed
 
     python3 vla/video_to_lerobot.py --cbd-dir work/cbd_video --out work/lerobot_video
     python3 vla/video_to_lerobot.py --cbd-dir work/cbd_video --out work/lerobot_video_mirror --mirror   # V-5b
+    python3 vla/video_to_lerobot.py --cbd-dir work/my_clips --out work/my_video --caption "IMG_0001=a person waves."
 """
 import argparse
 import json
 import pathlib
+import re
 import sys
 
 import numpy as np
@@ -60,9 +67,52 @@ TUNE = {"2236", "2238", "2240", "2242", "2244", "2246", "2248", "2250", "2252", 
 EXCLUDE = {"sample"}
 
 
-def caption(name):
+def table_caption(name):
     key = name.rsplit("_", 1)[0] if name[-4:].isdigit() else name
-    return CAPTIONS[key]
+    return CAPTIONS.get(key)
+
+
+def neutral_sentence(text):
+    """Bring a generated caption to the training style: "a person ...", ending in a period, no gendered words."""
+    for pat, new in ((r"\b(?:woman|man|girl|boy|lady|guy)\b", "person"), (r"\b(?:she|he)\b", "the person"),
+                     (r"\b(?:her|his)\b", "their"), (r"\bhim\b", "them"), (r"\b(?:herself|himself)\b", "themselves")):
+        text = re.sub(pat, new, text, flags=re.IGNORECASE)
+    text = text.strip()
+    if not text:
+        return ""
+    return text[0].lower() + text[1:] + ("" if text[-1] in ".!?" else ".")
+
+
+def temporal_caption(root):
+    """One caption from CBD's temporal captions (GR00T takes one per episode), or None if the clip has none."""
+    p = root / "captions" / "temporal_captions.json"
+    if not p.exists():
+        return None
+    windows = sorted(json.loads(p.read_text()).get("captions", []), key=lambda w: w.get("start_sec", 0))
+    texts = [neutral_sentence(w.get("caption_en") or "") for w in windows]
+    return " ".join(dict.fromkeys(t for t in texts if t)) or None
+
+
+def swap_sides(text):
+    return re.sub(r"\b(left|right)\b", lambda m: "right" if m[1].lower() == "left" else "left", text, flags=re.IGNORECASE)
+
+
+def clip_root(d):
+    """The folder holding the CBD files: the clip folder itself, or 04_behavior_dataset inside an unzipped notebook bundle."""
+    for root in (d, d / "04_behavior_dataset"):
+        if (root / "manifest.json").exists() and (root / "quality" / "quality.json").exists():
+            return root
+    return None
+
+
+def quality_problem(q, min_pose_coverage):
+    """Why the clip fails the quality gate, or None. The author's pipeline writes a verdict, the notebook writes numbers."""
+    overall = q["overall_quality"]
+    if overall == "fail":
+        return "failed the quality gate"
+    if not isinstance(overall, str) and q.get("pose_coverage", 1.0) < min_pose_coverage:
+        return f"pose_coverage {q['pose_coverage']} is below {min_pose_coverage}"
+    return None
 
 
 def slerp(a, b, w):
@@ -150,7 +200,7 @@ def load(d, fps_out):
     w = np.broadcast_to((t - i0)[:, None], (n, len(BONES)))
     Qo = slerp(Q[i0], Q[i1], w)
     obj = None
-    if frames[0].get("objects"):
+    if frames[0].get("objects") and "held_by" in frames[0]["objects"][0]:
         modes = object_modes(frames, fps_in)
         near = np.rint(t).astype(int).clip(0, T_in - 1)
         obj = dict(label=frames[0]["objects"][0]["label"], mode=drop_short_hidden([modes[k] for k in near], fps_out))
@@ -165,7 +215,16 @@ def main():
     ap.add_argument("--robot-type", default="cbd_humanoid")
     ap.add_argument("--mirror", action="store_true",
                     help="train に左右反転の複製を足す（V-5b。物の置き場所に幅を持たせる）。heldout は反転しない")
+    ap.add_argument("--caption", action="append", default=[], metavar="CLIP=SENTENCE",
+                    help="caption for one clip folder, in English (repeatable). Takes priority over every other source")
+    ap.add_argument("--min-pose-coverage", type=float, default=0.9,
+                    help="leave out notebook clips with a smaller share of frames with a pose")
     a = ap.parse_args()
+
+    manual = dict(c.split("=", 1) for c in a.caption)
+    names = {p.name for p in pathlib.Path(a.cbd_dir).iterdir()}
+    if set(manual) - names:
+        sys.exit(f"--caption: no such clip folder in {a.cbd_dir}: {sorted(set(manual) - names)}")
 
     import pyarrow as pa
     import pyarrow.parquet as pq
@@ -173,15 +232,31 @@ def main():
     out = pathlib.Path(a.out)
     (out / "meta").mkdir(parents=True, exist_ok=True)
     (out / "objects").mkdir(exist_ok=True)
-    clips, skipped = [], []
-    for d in sorted(pathlib.Path(a.cbd_dir).iterdir()):
-        q = json.loads((d / "quality" / "quality.json").read_text())
-        if d.name in EXCLUDE or q["overall_quality"] == "fail":
-            skipped.append((d.name, "外部の見本" if d.name in EXCLUDE else "品質ゲートで fail"))
+    clips, skipped, meta = [], [], {}
+    for d in sorted(p for p in pathlib.Path(a.cbd_dir).iterdir() if p.is_dir()):
+        root = clip_root(d)
+        if d.name in EXCLUDE or root is None:
+            skipped.append((d.name, "外部の見本" if d.name in EXCLUDE else "no manifest.json and quality/quality.json found"))
             continue
+        q = json.loads((root / "quality" / "quality.json").read_text())
+        problem = quality_problem(q, a.min_pose_coverage)
+        if problem:
+            skipped.append((d.name, problem))
+            continue
+        table = table_caption(json.loads((root / "manifest.json").read_text())["demo_name"])
+        sources = (("manual", manual.get(d.name)), ("table", table), ("temporal", temporal_caption(root)))
+        source, cap = next(((s, c) for s, c in sources if c), (None, None))
+        if cap is None:
+            skipped.append((d.name, "no caption: set GEMINI_API_KEY in the notebook, or pass --caption "
+                                    f"\"{d.name}=a person ...\""))
+            continue
+        meta[d.name] = dict(root=root, cap=cap, source=source, author=table is not None)
         clips.append((d, q["overall_quality"]))
+    if not clips:
+        sys.exit(f"no clip to convert in {a.cbd_dir}: {skipped}")
     # train first, heldout after (so they can be split by number)
-    part = {d.name: ("train" if d.name[-4:] in TUNE or not d.name[-4:].isdigit() else "heldout") for d, _ in clips}
+    part = {d.name: ("heldout" if meta[d.name]["author"] and d.name[-4:].isdigit() and d.name[-4:] not in TUNE else "train")
+            for d, _ in clips}
     clips.sort(key=lambda c: (part[c[0].name] != "train", c[0].name))
 
     # mirrored copies go after train (before heldout), so train / heldout stay separable by number
@@ -196,7 +271,7 @@ def main():
     split = {"train": [], "heldout": []}
     allx = []
     for ep, (d, qual, mirrored) in enumerate(jobs):
-        Q, obj, fps_in, T_in = load(d, a.fps)
+        Q, obj, fps_in, T_in = load(meta[d.name]["root"], a.fps)
         T = len(Q)
         state = np.concatenate([np.zeros((T, 3), np.float32),              # F-3: root fixed at 0
                                 quat_to_6d(Q).reshape(T, -1).astype(np.float32)], 1)
@@ -207,7 +282,7 @@ def main():
                 obj = dict(obj, mode=[SWAP.get(m, m) for m in obj["mode"]], mirrored=True)
         assert state.shape[1] == DIM
         action = np.concatenate([state[1:], state[-1:]], 0)
-        cap = caption(json.loads((d / "manifest.json").read_text())["demo_name"])
+        cap = swap_sides(meta[d.name]["cap"]) if mirrored else meta[d.name]["cap"]
         if cap not in task_id:
             task_id[cap] = len(tasks)
             tasks.append({"task_index": len(tasks), "task": cap})
@@ -225,13 +300,15 @@ def main():
             (out / "objects" / f"episode_{ep:06d}.json").write_text(json.dumps(obj))
         episodes.append({"episode_index": ep, "tasks": [cap], "length": T, "source_clip": d.name,
                          "part": part[d.name], "quality": qual, "object": obj["label"] if obj else None,
-                         "source_fps": fps_in, "source_frames": T_in, "mirrored": mirrored})
+                         "source_fps": fps_in, "source_frames": T_in, "mirrored": mirrored,
+                         "caption_source": meta[d.name]["source"]})
         split[part[d.name]].append(ep)
         n_frames += T
         allx.append(state.astype(np.float64))
         print(f"  {ep:3d} {part[d.name]:7s}{'（反転）' if mirrored else ''} {d.name[-44:]:44s} {T_in:4d}f@{fps_in:5.2f} -> {T:4d}f  "
               f"{obj['label'] if obj else '-':6s} {qual}")
 
+    uses_smpl = any(m["author"] for m in meta.values())    # the author's clips solve the torso with ROMP; the notebook uses MediaPipe only
     x = np.concatenate(allx)
     stat = dict(mean=x.mean(0).tolist(), std=x.std(0).tolist(), max=x.max(0).tolist(), min=x.min(0).tolist())
     json.dump({"observation.state": stat, "action": stat}, open(out / "meta" / "stats.json", "w"))
@@ -250,13 +327,14 @@ def main():
             "action_space": "CBD bone rotations, 6D continuous representation",
             "layout": {g: [s, e] for g, s, e in GROUPS}, "bones": BONES, "rest_pose": "T-pose",
             "coordinate_system": "y-up, right-handed, person faces +z",
-            "source": "自前の動画（iPhone、固定カメラ）→ vla/video_to_cbd.py の CBD",
+            "source": "自前の動画（iPhone、固定カメラ）→ vla/video_to_cbd.py の CBD" if uses_smpl else "CBD human-capture notebook",
             "root_translation": "0 固定（F-3。動画からは世界での移動を復元できない）",
             "objects": "state / action には入れない。objects/episode_XXXXXX.json にフレームごとの状態だけ"
                        "（位置はレンダの手に合わせる。render_with_objects.py）",
-            "captions": "撮影者が付けたファイル名から作った英文（video_to_lerobot.py の CAPTIONS）",
-            "smpl_used": True,
-            "license_note": "胴は SMPL（ROMP）で解いた値。SMPL の利用条件（非商用・再配布不可）が及ぶ",
+            "captions": "--caption, the file-name table CAPTIONS, or CBD's AI-generated temporal captions, "
+                        "per clip in episodes.jsonl (caption_source)",
+            "smpl_used": uses_smpl,
+            "license_note": "胴は SMPL（ROMP）で解いた値。SMPL の利用条件（非商用・再配布不可）が及ぶ" if uses_smpl else None,
             "split": "meta/split.json（train = 調整用 + 既存の実写、heldout = 採点用）",
             "mirrored_train": bool(a.mirror),
             "skipped": [dict(clip=c, why=w) for c, w in skipped],

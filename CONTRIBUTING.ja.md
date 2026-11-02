@@ -31,7 +31,7 @@
 - **同じ動作で、物の置き場所だけを変えたもの**（左・右・手前・奥・高め）。「物のある方へ行く」を学ぶのに、まさにこれが要る
 - 1 本 5〜15 秒、写るのは 1 人、実写だけ（生成した動画は、仕組みとしてわざと弾いています）
 
-[common-behavior-data](https://github.com/Koichi3333/common-behavior-data) の動画生成器で CBD にして、PR か、リンクを添えた Issue で送ってください。
+[common-behavior-data](https://github.com/Koichi3333/common-behavior-data) の human-capture ノートブックで CBD にして（手順は [README](README.ja.md) の「自分の CBD を持ち込む」）、PR か、リンクを添えた Issue で送ってください。ノートブックの zip には元の動画（`source/`）とフレーム画像（`timeline/frames/`）も入っています。共有したくない場合は取り除いてください。
 **権利を持っていて、写っている人が同意している撮影だけを送ってください。** 付けるライセンスも書いてください（CC BY 4.0 を勧めます）。
 保存するのは骨格と物の状態だけで、元の映像は残しません。
 
