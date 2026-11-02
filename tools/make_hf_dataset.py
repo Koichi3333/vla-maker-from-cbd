@@ -85,7 +85,10 @@ def build(src, out, keep):
     info = json.load(open(src / "meta/info.json"))
     info.update(total_episodes=len(new_eps), total_frames=n_total, total_tasks=len(task_id))
     info["cbd"] = dict(info["cbd"], skipped=[], split="meta/split.json (everything is train; there is no held-out set here)",
-                       source="Rollouts of an earlier model (arm B + inference-time guidance). No recording of a person is included.")
+                       source="Rollouts of an earlier model (arm B + inference-time guidance). No recording of a person is included.",
+                       captions="English sentences for the scene each rollout was started from",
+                       license_note="Non-commercial research or evaluation only. The clips the rollouts started from had their torso "
+                                    "fitted with SMPL; neither the SMPL model nor AMASS data is included. See docs/data.md.")
     info["cbd"].pop("synthetic_source", None)
     json.dump(info, open(out / "meta/info.json", "w"), indent=1, ensure_ascii=False)
     json.dump({"train": list(range(len(new_eps))), "heldout": []}, open(out / "meta/split.json", "w"))

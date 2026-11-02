@@ -49,7 +49,7 @@ The open research problems (🔴 / 🟠) need A100-class GPUs. If you have acces
 
 ### 5. Improve the code
 
-Translation of Japanese log messages and help texts, tests, CI, packaging, a non-Colab runner. See the 🟢 rows.
+Translation of Japanese log messages and help texts, tests, packaging, a non-Colab runner. See the 🟢 rows.
 
 ## Pull requests
 

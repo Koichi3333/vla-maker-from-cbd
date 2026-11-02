@@ -27,8 +27,9 @@ size_categories:
 # vla-maker-from-cbd: synthetic reaching clips (CBD, LeRobot format)
 
 **647 episodes, 35,128 frames, 20 fps.** Short reaching and object-handling motions of a humanoid, as CBD bone rotations in
-the LeRobot v2.0 layout. They are the training clips that taught the model in
-[Koichi3333/vla-maker-from-cbd](https://huggingface.co/Koichi3333/vla-maker-from-cbd) to reach for objects.
+the LeRobot v2.0 layout. They are part of the data used to train the model in
+[Koichi3333/vla-maker-from-cbd](https://huggingface.co/Koichi3333/vla-maker-from-cbd). We cannot claim
+that the model reaches objects precisely without inference-time guidance.
 
 > **Non-commercial research or evaluation use only.** Gated: you agree to this when you request access.
 

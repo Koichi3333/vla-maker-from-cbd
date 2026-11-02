@@ -54,7 +54,6 @@ Each one can be taken on by itself. Comment on (or open) an issue to claim one; 
 | 🟡 | [#5](https://github.com/Koichi3333/vla-maker-from-cbd/issues/5) **Check with physics.** Replay the generated G1 motion in a simulator that computes contact and gravity (Isaac, MuJoCo with contacts) and report what breaks | Everything so far is kinematic (poses in sequence, no forces) | Optional |
 | 🟡 | [#6](https://github.com/Koichi3333/vla-maker-from-cbd/issues/6) **Add fingers.** CBD has no finger bones yet, so "holding" is a check of whether the hand is close to the object | Real grasping needs fingers | No |
 | 🟢 | [#7](https://github.com/Koichi3333/vla-maker-from-cbd/issues/7) **Translate log messages.** Code comments are in English, but many printed messages and command-line help texts are still in Japanese | Lowers the barrier for everyone else | No |
-| 🟢 | [#8](https://github.com/Koichi3333/vla-maker-from-cbd/issues/8) **Put the CPU smoke test in CI (automated tests)**, packaging, type hints | Keeps the pipeline from quietly breaking | No |
 
 New to the project? Run the [CPU smoke test](#1-cpu-smoke-test-no-gpu-no-weights) first, then pick a 🟢 item.
 
