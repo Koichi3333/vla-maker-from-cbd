@@ -176,7 +176,7 @@ ACTION_HEAD=runs/t1/action_head.safetensors bash colab/go.sh infer ...   # 学�
 ### 4. 自分の CBD を持ち込む
 
 1. clip を撮り、[common-behavior-data](https://github.com/Koichi3333/common-behavior-data) の human-capture ノートブック（`examples/human-capture`）を回す。キャプションを付けるには Colab の秘密 `GEMINI_API_KEY` を設定する。設定しない場合は手順 3 で自分で書く。
-2. `demo2_output_bundle.zip` を 1 本ずつ別のフォルダへ展開する。フォルダ名が clip の名前になる: `unzip demo2_output_bundle.zip -d work/my_clips/IMG_0001`
+2. ノートブックが出す zip を 1 本ずつ別のフォルダへ展開する。フォルダ名が clip の名前になる: `unzip cbd_dataset.zip -d work/my_clips/IMG_0001`（`04_behavior_dataset/` は直下でも `output/` の下でも変換側が見つける）
 3. `python3 vla/video_to_lerobot.py --cbd-dir work/my_clips --out work/my_video` を実行する。117 次元の LeRobot データが書かれ、外した clip とその理由が表示される。理由は、キャプションが無い（`--caption "IMG_0001=a person waves."` で足す）か、骨格を捉えられたフレームが 90% 未満（`--min-pose-coverage`）のどちらか。
 4. `VIDEO_DATA=work/my_video bash colab/start.sh train ...` で学習する。
 

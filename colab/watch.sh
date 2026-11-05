@@ -5,7 +5,8 @@
 # Stops when the VM disappears or VLA_EXIT shows up. colab/start.sh and go.sh start it automatically.
 NAME=${1:?セッション名}
 while sleep 120; do
-  out=$(colab exec -s $NAME --timeout 60 2>&1 <<'PYEOF'
+  # Hard local deadline: colab-cli 0.7.5 can hang after the reply when the websocket connects late, ignoring --timeout
+  out=$(timeout -k 5 90 colab exec -s $NAME --timeout 60 2>&1 <<'PYEOF'
 import subprocess
 print(subprocess.run("tail -1 /content/run/job.log 2>/dev/null; f=$(ls -t /content/run/*.log 2>/dev/null | grep -v job.log | head -1); "
                      "[ -n \"$f\" ] && tail -c 300 $f | tr '\r' '\n' | tail -1", shell=True, capture_output=True, text=True).stdout)

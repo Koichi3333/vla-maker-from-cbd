@@ -14,7 +14,8 @@
 - **Tuning and scoring sets are separate** (V-5's H-3 is measured on the scoring set). `train` / `heldout` in `meta/split.json`.
   Only the author's clips have a scoring side; everyone else's clips are train
 - Each clip gets one caption, the first that exists: `--caption CLIP=SENTENCE`, then `CAPTIONS` (the author's clips), then CBD's optional
-  temporal captions (Gemini; windows joined in order, gendered words made neutral). **Clips with none are left out**, with the reason printed
+  temporal captions (Gemini; the one sentence for the whole clip, `clip_caption_en`, if present, else the windows joined in order;
+  gendered words made neutral). **Clips with none are left out**, with the reason printed
 
     python3 vla/video_to_lerobot.py --cbd-dir work/cbd_video --out work/lerobot_video
     python3 vla/video_to_lerobot.py --cbd-dir work/cbd_video --out work/lerobot_video_mirror --mirror   # V-5b
@@ -84,11 +85,18 @@ def neutral_sentence(text):
 
 
 def temporal_caption(root):
-    """One caption from CBD's temporal captions (GR00T takes one per episode), or None if the clip has none."""
+    """One caption from CBD's temporal captions (GR00T takes one per episode), or None if the clip has none.
+
+    The one sentence for the whole clip (`clip_caption_en`, written by newer notebooks) comes first; older files only
+    have per-window captions, which are joined in order."""
     p = root / "captions" / "temporal_captions.json"
     if not p.exists():
         return None
-    windows = sorted(json.loads(p.read_text()).get("captions", []), key=lambda w: w.get("start_sec", 0))
+    data = json.loads(p.read_text())
+    clip = neutral_sentence(data.get("clip_caption_en") or "")
+    if clip:
+        return clip
+    windows = sorted(data.get("captions", []), key=lambda w: w.get("start_sec", 0))
     texts = [neutral_sentence(w.get("caption_en") or "") for w in windows]
     return " ".join(dict.fromkeys(t for t in texts if t)) or None
 
@@ -98,8 +106,9 @@ def swap_sides(text):
 
 
 def clip_root(d):
-    """The folder holding the CBD files: the clip folder itself, or 04_behavior_dataset inside an unzipped notebook bundle."""
-    for root in (d, d / "04_behavior_dataset"):
+    """The folder holding the CBD files: the clip folder itself, or 04_behavior_dataset inside an unzipped notebook bundle
+    (at the top in `demo2_output_bundle.zip`, under `output/` in the newer bundle that also holds `source/` and `config.json`)."""
+    for root in (d, d / "04_behavior_dataset", d / "output" / "04_behavior_dataset"):
         if (root / "manifest.json").exists() and (root / "quality" / "quality.json").exists():
             return root
     return None

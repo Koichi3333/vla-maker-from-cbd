@@ -21,7 +21,10 @@ import json, os
 keys = ["DRIVE", "RUN", "STEPS", "DUP", "LR", "EVAL_GUIDES", "H1", "ACTION_HEAD", "FK_ETA", "JOINTS"]
 print(json.dumps({k: os.environ[k] for k in keys if os.environ.get(k)}))')
 
-colab exec -s $NAME --timeout 900 <<PYEOF | tail -4
+# Hard local deadline: colab-cli 0.7.5 can hang after sending when the websocket connects late, ignoring --timeout
+# (the code then never runs on the VM). The watcher starts either way so the allocation is not lost while you retry.
+LAUNCHED=1
+timeout -k 5 960 colab exec -s $NAME --timeout 900 <<PYEOF | tail -4 || LAUNCHED=0
 import json, os, subprocess, time
 ENV = json.loads(r"""$ENVS""")
 D = ENV["DRIVE"]
@@ -38,6 +41,7 @@ print("[go] $JOB を起動:", ENV)
 PYEOF
 
 start_watch $NAME
+[ $LAUNCHED = 1 ] || echo "  !! exec が返らなかった。colab download -s $NAME $RUNDIR/job.log /tmp/job.log で起動を確かめ、無ければ go.sh をもう一度"
 
 echo
 echo "  → 進み具合: tail -f /tmp/watch_$NAME.log（VLA_* の印が順に出る。終わりは VLA_DONE、異常は VLA_EXIT=非0）"

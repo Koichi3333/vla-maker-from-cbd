@@ -180,8 +180,8 @@ ACTION_HEAD=runs/t1/action_head.safetensors bash colab/go.sh infer ...   # evalu
 1. Record a clip and run the human-capture notebook in
    [common-behavior-data](https://github.com/Koichi3333/common-behavior-data) (`examples/human-capture`).
    Add the Colab secret `GEMINI_API_KEY` to get captions; without it, write them yourself in step 3.
-2. Unzip each `demo2_output_bundle.zip` into its own folder. The folder name becomes the clip name:
-   `unzip demo2_output_bundle.zip -d work/my_clips/IMG_0001`
+2. Unzip each zip the notebook gives you into its own folder. The folder name becomes the clip name:
+   `unzip cbd_dataset.zip -d work/my_clips/IMG_0001` (the converter finds `04_behavior_dataset/` at the top or under `output/`)
 3. Run `python3 vla/video_to_lerobot.py --cbd-dir work/my_clips --out work/my_video`. It writes the 117-d
    LeRobot dataset and prints every clip it left out and why: no caption (add `--caption "IMG_0001=a person waves."`)
    or a pose found in under 90% of the frames (`--min-pose-coverage`).

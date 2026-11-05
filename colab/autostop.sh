@@ -3,6 +3,7 @@
 #   nohup setsid bash colab/autostop.sh <session name> <destination> "<deadline (a time for date -d)>" > /tmp/autostop_<name>.log 2>&1 < /dev/null &
 # Example: bash colab/autostop.sh t1 work/t1 "now + 3 hours"
 set -uo pipefail
+# Every CLI call has a hard local deadline (colab-cli 0.7.5 can hang ignoring --timeout), so the stop is always reached
 source "$(dirname "$0")/common.sh"
 NAME=${1:?セッション名}; DEST=${2:?回収先}; DEADLINE=$(date -d "${3:?期限}" +%s)
 while :; do
@@ -11,13 +12,13 @@ while :; do
   sleep 30
 done
 mkdir -p $DEST
-colab exec -s $NAME --timeout 120 <<'PY' 2>&1 | grep -v "new version\|colab update\|silence this"
+timeout -k 5 180 colab exec -s $NAME --timeout 120 <<'PY' 2>&1 | grep -v "new version\|colab update\|silence this"
 import subprocess
 print(subprocess.run("grep -E 'VLA_|TIMING' /content/run/job.log; cd /content/run && [ -f results.tgz ] || tar czf results.tgz --exclude=base --exclude=mix --exclude=ckpt --exclude=train_video *.log eval* *.json 2>/dev/null",
                      shell=True, capture_output=True, text=True).stdout)
 PY
-colab download -s $NAME /content/run/results.tgz $DEST/results.tgz 2>&1 | tail -1
-colab stop -s $NAME 2>&1 | tail -1
+timeout -k 5 600 colab download -s $NAME /content/run/results.tgz $DEST/results.tgz 2>&1 | tail -1
+timeout -k 5 120 colab stop -s $NAME 2>&1 | tail -1
 stop_helpers $NAME
 colab sessions 2>&1 | tail -1
 $CLIPY $REPO/tools/colab_ccu.py 2>&1 | head -1

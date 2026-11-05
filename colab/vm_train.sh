@@ -87,7 +87,8 @@ echo VLA_BASE_OK; t base
 
 # ---------------------------------------------------------------- 5. Mix (normalization statistics stay those of HumanML3D train)
 .venv/bin/python $G/mix_datasets.py --hml $B/train --video $VID --dup $DUP --out $W/mix --heldout-out $W/video_heldout 2>&1 | tail -3
-MUJOCO_GL=egl .venv/bin/python $G/groot_eval.py --check-dataset $W/mix $W/video_heldout 2>&1 | tail -4
+CHECK=($W/mix); [ -d $W/video_heldout ] && CHECK+=($W/video_heldout)   # no scoring set when every clip is train
+MUJOCO_GL=egl .venv/bin/python $G/groot_eval.py --check-dataset "${CHECK[@]}" 2>&1 | tail -4
 echo VLA_MIX_OK; t mix
 
 # ---------------------------------------------------------------- 6. Train (only the action head is trained, the N1.7 default)

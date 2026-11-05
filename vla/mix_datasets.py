@@ -120,7 +120,12 @@ def main():
     print(f"[mix] HumanML3D {mix['humanml3d_episodes']} 本 + 動画 {mix['video_episodes']} 本 × {a.dup} "
           f"= {info['total_episodes']} 本 / {info['total_frames']} フレーム  動画のフレームの割合 "
           f"{mix['video_share_of_frames']:.4f} -> {a.out}")
-    # Scoring set: no HumanML3D, only the video heldout (renumbered from 20000; statistics from HumanML3D's train set)
+    # Scoring set: no HumanML3D, only the video heldout (renumbered from 20000; statistics from HumanML3D's train set).
+    # Clips from anyone but the author are all train, so the heldout can be empty: then no scoring set is written
+    if not split["heldout"]:
+        shutil.rmtree(a.heldout_out, ignore_errors=True)
+        print(f"[heldout] 採点用の動画が 0 本（split.json の heldout が空）。{a.heldout_out} は作らない")
+        return
     hinfo = build(hml, video, [veps[i] for i in split["heldout"]], pathlib.Path(a.heldout_out), None)
     print(f"[heldout] 動画の採点用 {hinfo['total_episodes']} 本 / {hinfo['total_frames']} フレーム -> {a.heldout_out}")
 
