@@ -20,13 +20,13 @@ start)
   GPU=cpu SECRETS= create_session $NAME
   start_watch $NAME
   echo "=== コードとモデルカードを送る"
-  colab exec -s $NAME --timeout 60 <<PYEOF | tail -1
+  timeout -k 5 90 colab exec -s $NAME --timeout 60 <<PYEOF | tail -1
 import os
 for d in ("$VM/colab", "$VM/hf", "$RUNDIR"): os.makedirs(d, exist_ok=True)
 print("[mkdir] ok")
 PYEOF
-  colab upload -s $NAME $REPO/colab/vm_hf_upload.py $VM/colab/vm_hf_upload.py | tail -1
-  for f in $REPO/hf/*; do colab upload -s $NAME "$f" $VM/hf/$(basename "$f") | tail -1; done
+  timeout -k 5 600 colab upload -s $NAME $REPO/colab/vm_hf_upload.py $VM/colab/vm_hf_upload.py | tail -1
+  for f in $REPO/hf/*; do timeout -k 5 600 colab upload -s $NAME "$f" $VM/hf/$(basename "$f") | tail -1; done
   echo "=== Drive マウント（認可 URL を待つ）"
   mount_drive_start $NAME
   echo
@@ -36,8 +36,8 @@ PYEOF
 go)
   mount_drive_finish $NAME
   echo "=== トークンをファイルで送る（VM 側は読み込んだ直後に消す）"
-  colab upload -s $NAME "$TOKEN_FILE" /content/.hf_write.json | tail -1
-  colab exec -s $NAME --timeout 60 <<PYEOF | tail -2
+  timeout -k 5 600 colab upload -s $NAME "$TOKEN_FILE" /content/.hf_write.json | tail -1
+  timeout -k 5 90 colab exec -s $NAME --timeout 60 <<PYEOF | tail -2
 import os, subprocess
 os.chmod("/content/.hf_write.json", 0o600)
 log = open("$RUNDIR/job.log", "w")

@@ -4,9 +4,13 @@
 
 **Build an AI model that moves a humanoid (a VLA) from human motion data (CBD).**
 
-[![smoke-test](https://github.com/Koichi3333/vla-maker-from-cbd/actions/workflows/smoke-test.yml/badge.svg)](https://github.com/Koichi3333/vla-maker-from-cbd/actions/workflows/smoke-test.yml)
+**No GPU machine needed.** The smoke test runs on a CPU, and the 3B model trains and evaluates on a Colab A100
+driven from your terminal — a Codespace in the browser is enough. [Three commands to start →](#run-it--no-gpu-machine-needed)
 
-[日本語](README.ja.md) · [Results](docs/results.md) · [Contributing](CONTRIBUTING.md) · [Common Behavior Data](https://github.com/Koichi3333/common-behavior-data)
+[![smoke-test](https://github.com/Koichi3333/vla-maker-from-cbd/actions/workflows/smoke-test.yml/badge.svg)](https://github.com/Koichi3333/vla-maker-from-cbd/actions/workflows/smoke-test.yml)
+[![No GPU machine needed](https://img.shields.io/badge/GPU-Colab%2C%20from%20your%20terminal-F9AB00?logo=googlecolab&logoColor=white)](#run-it--no-gpu-machine-needed)
+
+[日本語](README.ja.md) · **[Run it — no GPU](#run-it--no-gpu-machine-needed)** · [Results](docs/results.md) · [Contributing](CONTRIBUTING.md) · [Common Behavior Data](https://github.com/Koichi3333/common-behavior-data)
 
 <img src="docs/media/hero_video_to_vla.gif" width="544" alt="Left: a person on a chair reaches for a glass on a table and drinks, with the tracked skeleton overlaid. Right: the simulated humanoid driven by the VLA reaches for a magenta glass and brings it to its mouth">
 
@@ -127,6 +131,58 @@ Smoothed afterwards with [`vla/smooth_motion.py`](vla/smooth_motion.py), as abov
 *Left: motion generated from "a person walks forward", put on a G1 (kinematic). Right: "a person crawls on the floor".<br>
 The right sentence is not in the training data, and only 16 training clips show crawling at all.*
 
+## Run it — no GPU machine needed
+
+**You do not need a GPU of your own, a CUDA install or a cloud project to run this repository.** You need a Google
+account and a terminal, and the terminal can be a GitHub Codespace in your browser. GR00T N1.7 trains and evaluates
+on a Google Colab A100 that you start, drive and stop from that terminal with the official
+[Colab CLI](https://github.com/googlecolab/google-colab-cli), and give back when you are done.
+
+```text
+your terminal  (Codespace · laptop · SSH)            Google Colab VM
+  colab-cli/setup.sh       once
+  colab-cli/auth.sh        once  ───────────────►  sign in with your Google account
+  colab/start.sh infer x         ───────────────►  get an A100, upload the code, build the GR00T environment
+  (approve Drive in a browser)   ───────────────►  the weights are read from Drive
+  colab/go.sh infer x            ───────────────►  evaluation (or training) runs detached
+  colab download                 ◄───────────────  results come back as files
+  colab stop                     ───────────────►  the VM is released
+```
+
+| Step | Runs on | GPU and cost |
+| --- | --- | --- |
+| [CPU smoke test](#1-cpu-smoke-test-no-gpu-no-weights) | a laptop, a Codespace, GitHub Actions | none, free |
+| [`colab-cli/smoke_test.sh`](colab-cli/) (the CLI end to end) | a Colab CPU runtime | none, free tier |
+| Inference and evaluation | a Colab A100, from the CLI | ~20 min and ~1.4 CU per goal file |
+| Continued training | a Colab A100, from the CLI | ~1.5 h and ~9 CU for 5,000 steps |
+
+A100s need a paid Colab plan (about 5.3 CU an hour). A free T4 cannot train GR00T N1.7 (flash-attn 2 needs Ampere or newer).
+
+### Start here: [`colab-cli/`](colab-cli/)
+
+It has the same layout and commands as in [Common Behavior Data](https://github.com/Koichi3333/common-behavior-data),
+so a machine that ran the CBD generator runs this too. From the repository root:
+
+```bash
+colab-cli/setup.sh        # install uv + google-colab-cli 0.7.5 (safe to re-run)
+colab-cli/auth.sh         # sign in once per machine — the page opens in your browser
+colab-cli/smoke_test.sh   # start a CPU VM, run code, fetch a file, stop it (~1 min)
+```
+
+Then [run the usable form on Colab](#2-run-the-usable-form-on-colab) or [continue training](#3-continue-training).
+
+| Next, if you want to… | Read |
+| --- | --- |
+| Know what each step needs and costs | [What each step needs](colab-cli/README.md#what-each-step-needs) |
+| Know what differs between a Codespace and your own machine (sign-in, `HF_TOKEN`, what a rebuild deletes) | [Cloud or local](colab-cli/README.md#cloud-or-local-what-differs) |
+| Avoid the traps (a VM left running, the 60-minute token, allocations that vanish after ~25 min) | [Five rules](colab-cli/README.md#five-rules) · [docs/colab.md](docs/colab.md) |
+| Let Claude Code drive it | [`colab-cli/CLAUDE.md`](colab-cli/CLAUDE.md); a hook in [`.claude/settings.json`](.claude/settings.json) warns about any session still running |
+
+What has actually run this way: on `google-colab-cli` 0.7.5 in a Codespace, 500 training steps and two evaluations
+on an A100, end to end (2026-11-05). Since the tools moved into `colab-cli/`, `smoke_test.sh` and one A100
+evaluation have passed too (2026-11-09; same numbers as the table above). Full status:
+[`colab-cli/README.md`](colab-cli/README.md#status--what-has-and-has-not-been-run).
+
 ## Quick start
 
 ### 1. CPU smoke test (no GPU, no weights)
@@ -148,8 +204,8 @@ MUJOCO_GL=osmesa python3 tests/smoke_test.py rollout vlm   # same, with goals fr
 You need four things:
 
 - A Colab plan with A100 access
-- The [`google-colab-cli`](https://github.com/googlecolab/google-colab-cli) (pin `jupyter-kernel-client<1.0`)
-- A Hugging Face token with access to `nvidia/GR00T-N1.7-3B`
+- The Colab CLI, installed and signed in with `colab-cli/setup.sh` and `colab-cli/auth.sh` ([above](#run-it--no-gpu-machine-needed))
+- A Hugging Face token with access to `nvidia/GR00T-N1.7-3B` (`HF_TOKEN`, as a Codespaces secret or, short-lived, via `python3 colab-cli/tools/colab_secrets.py --set HF_TOKEN`; `colab/start.sh` hands it to the VM. [Details](colab-cli/README.md#a-short-lived-hf_token))
 - The weights in your Google Drive (see [Weights](#weights))
 
 ```bash
@@ -198,11 +254,12 @@ Mocap or any other CBD source goes through `vla/cbd_to_lerobot.py` the same way.
 | Path | What |
 | --- | --- |
 | `vla/` | Everything that runs: CBD ↔ LeRobot conversion, rendering, the GR00T modality config, evaluation, guidance, VLM goals |
+| `colab-cli/` | Colab CLI install, sign-in and end-to-end check (`setup.sh` / `auth.sh` / `smoke_test.sh`) and helpers (secrets, pty wrapper, session re-attach, CU balance). Same layout as CBD |
 | `colab/` | `start.sh` / `go.sh` (Codespace side), `vm_train.sh` / `vm_infer.sh` / `vm_data.sh` (VM side), `watch.sh`, `autostop.sh` |
 | `data/video_reach/` | Object-bearing clips: 24 real (the author's own videos; 13 train, 11 kept aside for evaluation) + 647 synthetic reaches made with guidance, 671 episodes, no images |
 | `data/eval/` | Evaluation specs: the 7 evaluation scenes, 7 training-side scenes, the goals the VLM picked |
 | `data/stats/` | Normalization statistics of `checkpoint-47000` (used by guidance and the smoke test) |
-| `tools/` | Colab helpers (CU balance, session re-attach, secrets, pty wrapper), Hugging Face metadata, the README GIFs |
+| `tools/` | Hugging Face metadata, the README GIFs |
 | `tests/smoke_test.py` | The CPU smoke test above |
 | `hf/README.md` | Model card of the Hugging Face repository |
 | `docs/` | Results, training data and its terms (`data.md`), Colab operations, media |

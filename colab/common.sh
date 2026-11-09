@@ -1,7 +1,11 @@
 # Shared part sourced by colab/start.sh, go.sh, watch.sh and autostop.sh (Codespace side).
 # Why things are done this way (why the watcher starts right after creation, why the token is swapped every 45 minutes, etc.) is in docs/colab.md.
+# The CLI itself is installed and signed in by colab-cli/setup.sh and colab-cli/auth.sh (colab-cli/README.md).
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-CLIPY=${CLIPY:-$HOME/.local/share/uv/tools/google-colab-cli/bin/python}   # Python of the uv tool that colab-cli is installed in
+CT=$REPO/colab-cli/tools  # CLI helpers: secrets, pty wrapper, re-attach, CU balance
+export PATH="$HOME/.local/bin:$PATH"
+# Python of the uv tool that google-colab-cli is installed in (colab_ccu.py and colab_reattach.py import colab_cli)
+CLIPY=${CLIPY:-$(uv tool dir 2>/dev/null || echo "$HOME/.local/share/uv/tools")/google-colab-cli/bin/python}
 DRIVE=${DRIVE:-/content/drive/MyDrive/VLA/VLA_1_0}                        # Drive folder as seen from the VM (weights, rendered HumanML3D data)
 VM=/content/vla        # Code and data on the VM
 RUNDIR=/content/run    # Working directory on the VM (logs, evaluation and training output)
@@ -11,9 +15,20 @@ job_ok() { [[ " $JOBS " == *" $1 "* ]] || { echo "JOB は train・infer・data �
 
 # ---------------------------------------------------------------- Session
 preflight() {
+  command -v colab >/dev/null || { echo "colab CLI が無い。先に colab-cli/setup.sh"; exit 1; }
+  [ -f "$HOME/.config/colab-cli/token.json" ] || { echo "Colab CLI に未ログイン。先に colab-cli/auth.sh"; exit 1; }
+  # Check the keys before allocating anything: a failure after `colab new` would leave a billing VM behind
+  local k
+  for k in ${SECRETS-HF_TOKEN}; do
+    k=${k#*=}
+    python3 -c "import sys; sys.path.insert(0, '$CT'); import colab_secrets as c; sys.exit(0 if c.find_secret('$k') else 1)" || {
+      echo "$k が見つからない（環境変数・colab-cli/.env・Codespaces Secret）。"
+      echo "  使い捨てのトークンなら: python3 colab-cli/tools/colab_secrets.py --set $k（入力は画面に出ない）"
+      exit 1; }
+  done
   echo "=== 残存セッションと CU 残高"
   colab sessions 2>&1 | tail -3
-  $CLIPY $REPO/tools/colab_ccu.py 2>&1 | head -2
+  $CLIPY $CT/colab_ccu.py 2>&1 | head -2
   echo "  → Codespace が止まると VM も道連れになる。長い実行の前に Codespace 側の keep-alive を確認すること"
 }
 
@@ -25,12 +40,12 @@ create_session() {   # $1=name
   colab new -s $NAME $ACC
   if [ "${SECRETS-HF_TOKEN}" != "" ]; then   # SECRETS= (empty) to pass none
     echo "=== ${SECRETS-HF_TOKEN}（exec より前に流す）"
-    python3 $REPO/tools/colab_secrets.py -s $NAME ${SECRETS-HF_TOKEN} | tail -1
+    python3 $CT/colab_secrets.py -s $NAME ${SECRETS-HF_TOKEN} | tail -1
   fi
   echo "=== トークン更新ループ（45 分ごと。CLI は 60 分で切れるトークンを更新しない）"
   local OLD; OLD=$(pgrep -f "colab_reattach.py --refresh $NAME" || true)
   [ -n "$OLD" ] && kill $OLD || true
-  nohup setsid bash -c "while sleep 2700; do $CLIPY $REPO/tools/colab_reattach.py --refresh $NAME || true; done" \
+  nohup setsid bash -c "while sleep 2700; do $CLIPY $CT/colab_reattach.py --refresh $NAME || true; done" \
       > /tmp/refresh_$NAME.log 2>&1 < /dev/null &
 }
 
@@ -49,21 +64,33 @@ stop_helpers() {   # $1=name
 
 # ---------------------------------------------------------------- Payload
 upload_bundle() {   # $1=name $2=tgz. colab upload fails on one large file, so send it in 20 MB parts
-  local NAME=$1 TGZ=$2 TMP=/tmp/vla_upload_$1
+  local NAME=$1 TGZ=$2 TMP=/tmp/vla_upload_$1 try
   rm -rf $TMP && mkdir -p $TMP
   split -b 20m $TGZ $TMP/bundle.tgz.part
-  colab exec -s $NAME --timeout 60 <<PYEOF | tail -1
+  # Every exec has a hard local deadline and is retried: colab-cli 0.7.5 can hang after sending, ignoring
+  # --timeout, and then the code never runs on the VM (seen here 2026-11-09). The VM-side code is idempotent.
+  for try in 1 2 3; do
+    timeout -k 5 90 colab exec -s $NAME --timeout 60 <<PYEOF | tail -1 && break
 import os
 for d in ("$VM", "$RUNDIR"): os.makedirs(d, exist_ok=True)
 print("[mkdir] $VM $RUNDIR")
 PYEOF
-  for f in $TMP/bundle.tgz.part*; do colab upload -s $NAME $f $VM/$(basename $f) | tail -1; done
-  colab exec -s $NAME --timeout 300 <<PYEOF | tail -2
-import subprocess
-subprocess.run("cd $VM && cat bundle.tgz.part* > bundle.tgz && tar xzf bundle.tgz && rm -f bundle.tgz bundle.tgz.part*", shell=True, check=True)
-subprocess.Popen("nohup bash $VM/colab/setup_vm.sh > /content/groot_setup.log 2>&1 &", shell=True)
-print("[bundle] 展開した。環境構築を裏で開始（約 2 分）")
+    [ $try = 3 ] && { echo "  mkdir の exec が 3 回とも通らない。colab stop -s $NAME で止めること"; exit 1; }
+    echo "  mkdir の exec が失敗したか返らない（$try 回目）。やり直す"
+  done
+  for f in $TMP/bundle.tgz.part*; do timeout -k 5 600 colab upload -s $NAME $f $VM/$(basename $f) | tail -1; done
+  for try in 1 2 3; do
+    timeout -k 5 360 colab exec -s $NAME --timeout 300 <<PYEOF | tail -2 && break
+import glob, os, subprocess
+if glob.glob("$VM/bundle.tgz.part*"):   # not yet extracted
+    subprocess.run("cd $VM && cat bundle.tgz.part* > bundle.tgz && tar xzf bundle.tgz && rm -f bundle.tgz bundle.tgz.part*", shell=True, check=True)
+if not os.path.exists("/content/groot_setup.log"):   # start the setup once only
+    subprocess.Popen("nohup bash $VM/colab/setup_vm.sh > /content/groot_setup.log 2>&1 &", shell=True)
+print("[bundle] 展開した:", sorted(os.listdir("$VM")), "。環境構築を裏で開始（約 2 分）")
 PYEOF
+    [ $try = 3 ] && { echo "  展開の exec が 3 回とも通らない。colab stop -s $NAME で止めること"; exit 1; }
+    echo "  展開の exec が失敗したか返らない（$try 回目）。やり直す"
+  done
   rm -rf $TMP
 }
 
@@ -72,7 +99,7 @@ mount_drive_start() {   # $1=name. Writes the authorization URL to /tmp/dm_url.t
   local NAME=$1 try
   for try in 1 2; do   # It sometimes fails with "Connection was lost" before printing the URL. Retry once
     rm -f /tmp/dm.log /tmp/dm.in
-    nohup setsid python3 $REPO/tools/ptyrun.py /tmp/dm.log /tmp/dm.in \
+    nohup setsid python3 $CT/ptyrun.py /tmp/dm.log /tmp/dm.in \
         colab drivemount -s $NAME /content/drive > /tmp/dm_wrap.log 2>&1 < /dev/null &
     for i in $(seq 1 24); do grep -q "accounts.google.com\|Connection was lost\|ptyrun\] exit" /tmp/dm.log 2>/dev/null && break; sleep 5; done
     grep -q "accounts.google.com" /tmp/dm.log && break
@@ -102,7 +129,7 @@ mount_drive_finish() {   # $1=name. Sends Enter after consent. On "mount failed"
   if ! grep -q "Mounted at" /tmp/dm.log && grep -q "mount failed" /tmp/dm.log; then
     echo "  mount failed → colab drivemount をやり直す（同意は不要のはず）"
     rm -f /tmp/dm.log /tmp/dm.in
-    nohup setsid python3 $REPO/tools/ptyrun.py /tmp/dm.log /tmp/dm.in colab drivemount -s $NAME /content/drive > /tmp/dm_wrap.log 2>&1 < /dev/null &
+    nohup setsid python3 $CT/ptyrun.py /tmp/dm.log /tmp/dm.in colab drivemount -s $NAME /content/drive > /tmp/dm_wrap.log 2>&1 < /dev/null &
     for i in $(seq 1 36); do grep -q "Mounted at\|accounts.google.com\|mount failed\|ptyrun\] exit" /tmp/dm.log 2>/dev/null && break; sleep 5; done
   fi
   tail -3 /tmp/dm.log

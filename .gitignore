@@ -5,7 +5,7 @@ work/*
 # Author's local agent rules (handoff notes, private environment); the public rules are CLAUDE.md
 CLAUDE.local.md
 
-# Secrets (tools/colab_secrets.py passes them through temporary files)
+# Secrets (colab-cli/tools/colab_secrets.py passes them through temporary files; local keys go in colab-cli/.env)
 .secrets.json
 secrets.json
 *.secrets.json
@@ -23,7 +23,7 @@ secrets.json
 *.zip
 *.mp4
 
-# drivemount / auth logs from tools/ptyrun.py
+# drivemount / auth logs from colab-cli/tools/ptyrun.py
 dm.log
 dm.in
 

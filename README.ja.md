@@ -4,9 +4,14 @@
 
 **人の動きのデータ（CBD）から、ヒューマノイドを動かす AI（VLA）を作る。**
 
-[![smoke-test](https://github.com/Koichi3333/vla-maker-from-cbd/actions/workflows/smoke-test.yml/badge.svg)](https://github.com/Koichi3333/vla-maker-from-cbd/actions/workflows/smoke-test.yml)
+**手元に GPU マシンは要りません。** 通しテストは CPU で動き、3B のモデルの学習と評価は、
+ターミナル（ブラウザで開いた Codespace で十分）から操作する Colab の A100 で動きます。
+[3つのコマンドで始める →](#gpu-マシンが無くても動かせる--ターミナルから-colab-へ)
 
-[English](README.md) · [結果（詳細）](docs/results.ja.md) · [参加の仕方](CONTRIBUTING.ja.md) · [Common Behavior Data](https://github.com/Koichi3333/common-behavior-data)
+[![smoke-test](https://github.com/Koichi3333/vla-maker-from-cbd/actions/workflows/smoke-test.yml/badge.svg)](https://github.com/Koichi3333/vla-maker-from-cbd/actions/workflows/smoke-test.yml)
+[![No GPU machine needed](https://img.shields.io/badge/GPU-Colab%2C%20from%20your%20terminal-F9AB00?logo=googlecolab&logoColor=white)](#gpu-マシンが無くても動かせる--ターミナルから-colab-へ)
+
+[English](README.md) · **[GPU 無しで動かす](#gpu-マシンが無くても動かせる--ターミナルから-colab-へ)** · [結果（詳細）](docs/results.ja.md) · [参加の仕方](CONTRIBUTING.ja.md) · [Common Behavior Data](https://github.com/Koichi3333/common-behavior-data)
 
 <img src="docs/media/hero_video_to_vla.gif" width="544" alt="左: 椅子に座った人がテーブルのグラスに手を伸ばして飲む動画に、捉えた骨格を重ねたもの。右: VLA が動かすシミュレーションの人型が、マゼンタのグラスに手を伸ばして口元へ運ぶ">
 
@@ -126,6 +131,57 @@ MuJoCo の運動学のシミュレーションで測りました。
 *左: 「a person walks forward」（前へ歩く）と指示して生成した動きを、G1 に載せたもの（運動学）。右: 「a person crawls on the floor」（床を這う）。<br>
 右の文は学習データに無く、這う動きの clip も学習データに 16 本しかない。*
 
+## GPU マシンが無くても動かせる —— ターミナルから Colab へ
+
+**このリポジトリを動かすのに、自分の GPU も CUDA のインストールもクラウドのプロジェクトも要りません。**
+要るのは Google アカウントとターミナルだけで、ターミナルはブラウザで開いた GitHub Codespace で十分です。
+GR00T N1.7 の学習と評価は Google Colab の A100 で動き、その VM の起動・実行・停止をターミナルから公式の
+[Colab CLI](https://github.com/googlecolab/google-colab-cli) で行います。終わったら VM は返します。
+
+```text
+手元のターミナル（Codespace・ノート PC・SSH）          Google Colab の VM
+  colab-cli/setup.sh        最初に1回
+  colab-cli/auth.sh         最初に1回  ──────────►  Google アカウントでログイン
+  colab/start.sh infer x               ──────────►  A100 を確保し、コードを送り、GR00T の環境を作る
+  （ブラウザで Drive に同意）           ──────────►  Drive から重みを読む
+  colab/go.sh infer x                  ──────────►  評価（または学習）を切り離して実行
+  colab download                       ◄──────────  結果をファイルで受け取る
+  colab stop                           ──────────►  VM を解放
+```
+
+| 工程 | 動かす場所 | GPU と費用 |
+| --- | --- | --- |
+| [CPU の通しテスト](#1-cpu-の通しテストgpu-も重みも要らない) | ノート PC・Codespace・GitHub Actions | 不要・無料 |
+| [`colab-cli/smoke_test.sh`](colab-cli/)（CLI の疎通） | Colab の CPU | 不要・無料枠で可 |
+| 推論と評価 | Colab の A100（CLI から） | 目標ファイル 1 本で約 20 分・約 1.4 CU |
+| 続きの学習 | Colab の A100（CLI から） | 5,000 ステップで約 1.5 時間・約 9 CU |
+
+A100 には有料の Colab プランが要ります（約 5.3 CU/時）。無料枠の T4 では GR00T N1.7 を学習できません（flash-attn 2 が Ampere 以降を要求する）。
+
+### まずはここから: [`colab-cli/`](colab-cli/)
+
+[Common Behavior Data](https://github.com/Koichi3333/common-behavior-data) と同じ構成・同じコマンドです。
+CBD の生成器を動かした環境なら、そのままこちらも動かせます。リポジトリのルートで:
+
+```bash
+colab-cli/setup.sh        # uv と google-colab-cli 0.7.5 を入れる（何度流してもよい）
+colab-cli/auth.sh         # ログイン。マシンごとに1回。ブラウザでページが開く
+colab-cli/smoke_test.sh   # CPU の VM を起動 → 実行 → ファイル回収 → 停止（約1分）
+```
+
+続きは [使える形を Colab で動かす](#2-使える形を-colab-で動かす) と [続きの学習](#3-続きの学習) です。
+
+| 次に知りたいこと | 読むところ |
+| --- | --- |
+| 何に何が要り、いくらかかるか | [何に何が要るか](colab-cli/README.ja.md#何に何が要るか) |
+| Codespace と自分のマシンで何が違うか（ログイン・`HF_TOKEN`・Rebuild で消えるもの） | [クラウドとローカルで違うところ](colab-cli/README.ja.md#クラウドとローカルで違うところ) |
+| 落とし穴を避けたい（VM の止め忘れ、60 分のトークン、約 25 分で消える割り当て） | [守ること](colab-cli/README.ja.md#守ること) · [docs/colab.md](docs/colab.md) |
+| Claude Code に操作させたい | [`colab-cli/CLAUDE.md`](colab-cli/CLAUDE.md)。[`.claude/settings.json`](.claude/settings.json) のフックが、止め忘れたセッションを警告します |
+
+実際にこの方法で動かしたもの: Codespace 上の `google-colab-cli` 0.7.5 で、A100 での 500 ステップの学習と評価 2 本を
+最後まで（2026-11-05）。道具を `colab-cli/` にまとめた後も、`smoke_test.sh` と A100 での評価 1 本が通りました（2026-11-09。数字は「いまできること」の表と同じ）。
+詳細: [`colab-cli/README.ja.md`](colab-cli/README.ja.md#状態--何を動かし何をまだ動かしていないか)
+
 ## はじめかた
 
 ### 1. CPU の通しテスト（GPU も重みも要らない）
@@ -147,8 +203,8 @@ MUJOCO_GL=osmesa python3 tests/smoke_test.py rollout vlm   # 目標を VLM の�
 要るものは次の 4 つです。
 
 - A100 が使える Colab の契約
-- [`google-colab-cli`](https://github.com/googlecolab/google-colab-cli)（`jupyter-kernel-client<1.0` に固定する）
-- `nvidia/GR00T-N1.7-3B` を取れる Hugging Face のトークン
+- `colab-cli/setup.sh` と `colab-cli/auth.sh` で入れてログインした Colab CLI（[上](#gpu-マシンが無くても動かせる--ターミナルから-colab-へ)）
+- `nvidia/GR00T-N1.7-3B` を取れる Hugging Face のトークン（`HF_TOKEN`。Codespaces の Secret か、使い捨てなら `python3 colab-cli/tools/colab_secrets.py --set HF_TOKEN`。`colab/start.sh` が VM へ渡す。[詳細](colab-cli/README.ja.md#hf_token-を使い捨てにする)）
 - Google Drive に置いた重み（[重み](#重み)）
 
 ```bash
@@ -189,11 +245,12 @@ mocap など、ほかの出所の CBD も同じように `vla/cbd_to_lerobot.py`
 | 場所 | 中身 |
 | --- | --- |
 | `vla/` | 動くものすべて。CBD ↔ LeRobot の変換、描画、GR00T の modality config、評価、誘導、VLM の目標 |
+| `colab-cli/` | Colab CLI の導入・ログイン・疎通確認（`setup.sh` / `auth.sh` / `smoke_test.sh`）と補助（Secret・pty の包み・セッションの付け直し・CU 残高）。CBD と同じ構成 |
 | `colab/` | `start.sh` / `go.sh`（Codespace 側）、`vm_train.sh` / `vm_infer.sh` / `vm_data.sh`（VM 側）、`watch.sh`、`autostop.sh` |
 | `data/video_reach/` | 物つきのデータ。実写 24 本（作者の動画。学習 13 本、評価用に取り分けた 11 本）＋ 誘導して作った合成 647 本、計 671 本。画像は含まない |
 | `data/eval/` | 評価の仕様。評価用の 7 場面・学習側の 7 場面・VLM が選んだ目標 |
 | `data/stats/` | `checkpoint-47000` の正規化の統計（誘導と通しテストが使う） |
-| `tools/` | Colab の補助（CU 残高・セッションの付け直し・Secret・pty の包み）・Hugging Face のメタデータ・README の GIF |
+| `tools/` | Hugging Face のメタデータ・README の GIF |
 | `tests/smoke_test.py` | 上の CPU の通しテスト |
 | `hf/README.md` | Hugging Face のリポジトリのモデルカード |
 | `docs/` | 結果・学習データと規約（`data.ja.md`）・Colab の運用・メディア |

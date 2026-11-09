@@ -37,7 +37,8 @@
 
 ### 4. 実験する（GPU）
 
-研究として開いている課題（🔴 / 🟠）には A100 級の GPU が要ります。使える方へ:
+研究として開いている課題（🔴 / 🟠）には A100 級の GPU が要ります。手元に無くても、有料の Colab プランがあれば
+ターミナルから A100 を借りて回せます（[`colab-cli/`](colab-cli/README.ja.md)。費用の目安もそこにあります）。使える方へ:
 
 - `colab/vm_train.sh` の手順から始めてください。中身はただのシェルなので、A100 のある環境ならどこへでも移せます
 - 結果は `vla/groot_eval.py` で `data/eval/object_eval_heldout.json` を評価して出してください。[結果の表](docs/results.ja.md) と比べられます

@@ -21,5 +21,5 @@ timeout -k 5 600 colab download -s $NAME /content/run/results.tgz $DEST/results.
 timeout -k 5 120 colab stop -s $NAME 2>&1 | tail -1
 stop_helpers $NAME
 colab sessions 2>&1 | tail -1
-$CLIPY $REPO/tools/colab_ccu.py 2>&1 | head -1
+$CLIPY $CT/colab_ccu.py 2>&1 | head -1
 echo "$(date -u +%T) AUTOSTOP_DONE"

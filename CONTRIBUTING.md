@@ -40,7 +40,8 @@ you grant (we suggest CC BY 4.0). We store skeletons and object states, never th
 
 ### 4. Run an experiment (GPU)
 
-The open research problems (🔴 / 🟠) need A100-class GPUs. If you have access:
+The open research problems (🔴 / 🟠) need A100-class GPUs. You do not need one of your own: with a paid Colab plan
+you can rent an A100 from your terminal ([`colab-cli/`](colab-cli/README.md), which also lists the costs). If you have access:
 
 - Start from the recipe in `colab/vm_train.sh`. Its steps are plain shell, so they port to any machine with an A100.
 - Report results with the evaluator in `vla/groot_eval.py` on `data/eval/object_eval_heldout.json`, so numbers are comparable to the [results table](docs/results.md).

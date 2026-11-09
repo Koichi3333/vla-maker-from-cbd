@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Show Colab's CU balance, consumption rate and the GPUs that can be allocated (reuses the colab CLI's credentials).
 
-    ~/.local/share/uv/tools/google-colab-cli/bin/python tools/colab_ccu.py
+    ~/.local/share/uv/tools/google-colab-cli/bin/python colab-cli/tools/colab_ccu.py
 
 Use it when `colab new --gpu A100` fails with "Backend rejected accelerator", to find out
 **which plan the CLI's account is on**.

@@ -46,7 +46,11 @@ start_watch $NAME
 echo
 echo "  → 進み具合: tail -f /tmp/watch_$NAME.log（VLA_* の印が順に出る。終わりは VLA_DONE、異常は VLA_EXIT=非0）"
 echo "  → VM が消えたとき: Drive の runs/$RUN/live/（ログと health.txt を 1 分ごとに写している）"
-echo "  → 60 分で CLI がセッションを捨てたら: \$CLIPY tools/colab_reattach.py $NAME で付け直し、bash colab/watch.sh を張り直す"
+echo "  → 60 分で CLI がセッションを捨てたら: \$CLIPY colab-cli/tools/colab_reattach.py $NAME で付け直し、bash colab/watch.sh を張り直す"
 echo "  → 席を外すなら: nohup setsid bash colab/autostop.sh $NAME work/$RUN '<期限>' > /tmp/autostop_$NAME.log 2>&1 < /dev/null &"
 echo "  → 回収: colab download -s $NAME $RUNDIR/results.tgz work/$RUN/results.tgz（Drive の runs/$RUN/ にも写す）"
 echo "  → **終わったら colab stop -s $NAME**"
+# A short-lived key kept in colab-cli/.env is no longer needed here: the job got it from the kernel's environment
+if grep -qs '^HF_TOKEN=' "$REPO/colab-cli/.env" && [ $LAUNCHED = 1 ]; then
+  echo "  → ジョブは HF_TOKEN を持って起動済み。手元から消すなら: python3 colab-cli/tools/colab_secrets.py --unset HF_TOKEN（使い捨てなら、終わった後に Hugging Face でトークン自体も削除）"
+fi

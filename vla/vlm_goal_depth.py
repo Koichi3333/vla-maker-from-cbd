@@ -59,11 +59,11 @@ def cases():
 
 
 def cmd_ask(a):
-    from colab_secrets import load_codespaces_secrets
+    from colab_secrets import find_secret
     if datetime.date.today() > V.PRICE_UNTIL:
         sys.exit(f"[ask] 単価の確認日（{V.PRICE_UNTIL} まで有効）を過ぎた。料金ページで確かめて PRICES を直すこと")
     cap = min(a.cap, V.CAP_USD)
-    key = load_codespaces_secrets().get("GEMINI_API_KEY")
+    key = find_secret("GEMINI_API_KEY")
     if not key:
         sys.exit("[ask] GEMINI_API_KEY が無い")
     ans_p = OUT / f"answers_box_{a.model}.jsonl"

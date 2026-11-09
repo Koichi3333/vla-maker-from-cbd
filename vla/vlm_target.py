@@ -19,7 +19,8 @@ and maxOutputTokens caps it). Prices were checked on the pricing page on 2026-10
     python3 vla/vlm_target.py score                               # score
     python3 vla/vlm_target.py spend                               # total of the spend log
 
-The key is read from a file with the function in tools/colab_secrets.py. **Never print or echo the key** (CLAUDE.md).
+The key is looked up by colab-cli/tools/colab_secrets.py (environment, then colab-cli/.env, then Codespaces secrets).
+**Never print or echo the key** (CLAUDE.md).
 """
 import argparse
 import base64
@@ -35,7 +36,7 @@ import urllib.request
 import numpy as np
 
 R = pathlib.Path(__file__).resolve().parent.parent
-sys.path[:0] = [str(R / "vla"), str(R / "tools")]
+sys.path[:0] = [str(R / "vla"), str(R / "colab-cli" / "tools")]
 OUT = pathlib.Path(os.environ.get("VLA_WORK", R / "work")) / "vlm"     # images, questions, answers, spend log (not tracked by git)
 SPEC = pathlib.Path(os.environ.get("VLA_SPEC", R / "data/eval/object_eval_heldout.json"))   # scenes whose goal is asked
 XML = R / "vla/humanoid.xml"
@@ -278,11 +279,11 @@ def cost(model, prompt_tok, out_tok):
 
 
 def cmd_ask(a):
-    from colab_secrets import load_codespaces_secrets
+    from colab_secrets import find_secret
     if datetime.date.today() > PRICE_UNTIL:
         sys.exit(f"[ask] 単価の確認日（{PRICE_UNTIL} まで有効）を過ぎた。料金ページで確かめて PRICES を直すこと")
     cap = min(a.cap, CAP_USD)
-    key = load_codespaces_secrets().get("GEMINI_API_KEY")
+    key = find_secret("GEMINI_API_KEY")
     if not key:
         sys.exit("[ask] GEMINI_API_KEY が無い")
     qs = json.loads((OUT / "questions.json").read_text())

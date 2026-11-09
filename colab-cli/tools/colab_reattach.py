@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Re-attach an allocation (VM) still alive on the server to a local session name.
 
-    ~/.local/share/uv/tools/google-colab-cli/bin/python tools/colab_reattach.py vla2 [endpoint]
-    ~/.local/share/uv/tools/google-colab-cli/bin/python tools/colab_reattach.py --refresh vla2
+    ~/.local/share/uv/tools/google-colab-cli/bin/python colab-cli/tools/colab_reattach.py vla2 [endpoint]
+    ~/.local/share/uv/tools/google-colab-cli/bin/python colab-cli/tools/colab_reattach.py --refresh vla2
 
 **When to use it:** `colab exec` returns "Session 'X' not found", but `colab sessions` still lists
 `[?] gpu-a100-... | Hardware: A100` (observed 2026-09-13).
