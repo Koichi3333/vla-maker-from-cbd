@@ -143,7 +143,7 @@ your terminal  (Codespace · laptop · SSH)            Google Colab VM
   colab-cli/setup.sh       once
   colab-cli/auth.sh        once  ───────────────►  sign in with your Google account
   colab/start.sh infer x         ───────────────►  get an A100, upload the code, build the GR00T environment
-  (approve Drive in a browser)   ───────────────►  the weights are read from Drive
+  (approve Drive in a browser)   ───────────────►  weights from Hugging Face, data from Drive
   colab/go.sh infer x            ───────────────►  evaluation (or training) runs detached
   colab download                 ◄───────────────  results come back as files
   colab stop                     ───────────────►  the VM is released
@@ -205,8 +205,9 @@ You need four things:
 
 - A Colab plan with A100 access
 - The Colab CLI, installed and signed in with `colab-cli/setup.sh` and `colab-cli/auth.sh` ([above](#run-it--no-gpu-machine-needed))
-- A Hugging Face token with access to `nvidia/GR00T-N1.7-3B` (`HF_TOKEN`, as a Codespaces secret or, short-lived, via `python3 colab-cli/tools/colab_secrets.py --set HF_TOKEN`; `colab/start.sh` hands it to the VM. [Details](colab-cli/README.md#a-short-lived-hf_token))
-- The weights in your Google Drive (see [Weights](#weights))
+- A Hugging Face token whose account has accepted the terms of `nvidia/GR00T-N1.7-3B` and of [our weights](#weights) (`HF_TOKEN`, as a Codespaces secret or, short-lived, via `python3 colab-cli/tools/colab_secrets.py --set HF_TOKEN`; `colab/start.sh` hands it to the VM. [Details](colab-cli/README.md#a-short-lived-hf_token))
+- `data/b3_dataset.tar` (the rendered HumanML3D data) in your Google Drive. You build it yourself from AMASS with
+  `colab/go.sh data`, since AMASS-derived data cannot be redistributed ([docs/data.md](docs/data.md))
 
 ```bash
 bash colab/start.sh infer myrun        # creates an A100 session, uploads code, stops at the Drive consent URL
@@ -243,8 +244,10 @@ ACTION_HEAD=runs/t1/action_head.safetensors bash colab/go.sh infer ...   # evalu
    or a pose found in under 90% of the frames (`--min-pose-coverage`).
 4. Train with `VIDEO_DATA=work/my_video bash colab/start.sh train ...`.
 
-The notebook does not say which hand holds an object, so these clips get no object states and no object is drawn in
-their rendered video, even when the caption mentions one. The unzipped `source/` folder holds your original video;
+Object states come from the hand the notebook writes on the primary object (`held_by`); for zips made before it did,
+from the per-frame phase and hand: Grasp / Carry (and Hold / Toss / Catch for a toss) put the primary object in that hand,
+Flight hides it. The object is drawn as a simple proxy shape (ball, cup, bottle, bowl,
+book, phone); other labels are not drawn, and a clip in which nothing is ever held gets no object. The unzipped `source/` folder holds your original video;
 the converter does not read it, so do not commit or share it by accident.
 
 Mocap or any other CBD source goes through `vla/cbd_to_lerobot.py` the same way.
@@ -274,9 +277,11 @@ The usable form is made of two weight files. Both are derived from GR00T N1.7 (3
 They are public on Hugging Face at **[Koichi3333/vla-maker-from-cbd](https://huggingface.co/Koichi3333/vla-maker-from-cbd)**.
 To download them, log in to Hugging Face and agree to the terms below (non-commercial research or evaluation only); access is gated.
 
-The Colab scripts still read them from Google Drive under `MyDrive/VLA/VLA_1_0/`
-(`ckpt/checkpoint-47000/`, `v12e/…armH.safetensors`, `data/b3_dataset.tar`; set `DRIVE=` to change that).
-Switching them to Hugging Face is planned.
+The Colab scripts download both from there with your `HF_TOKEN` (`colab/vm_fetch_base.py`), so they need no copy in Drive.
+`colab/go.sh` checks the access with one small file before the ~15 GB download. `WEIGHTS=drive` reads them from Drive
+under `MyDrive/VLA/VLA_1_0/` instead (`ckpt/checkpoint-47000/`, `v12e/…armH.safetensors`; set `DRIVE=` to change that).
+An action head you trained yourself (`ACTION_HEAD=runs/<run>/action_head.safetensors`) is always read from Drive,
+and so is `data/b3_dataset.tar`.
 
 - Re-upload from Drive to Hugging Face: `colab/hf_upload.sh` (the model card is `hf/README.md`)
 - Rebuild the rendered training data `b3_dataset.tar`: `colab/go.sh data`. The HumanML3D it starts from is something you build yourself from AMASS ([docs/data.md](docs/data.md))

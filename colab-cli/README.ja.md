@@ -32,14 +32,15 @@ colab-cli/smoke_test.sh   # CPU の VM を起動 → 実行 → ファイル回�
 |---|---|---|---|
 | CPU の通しテスト（[`tests/smoke_test.py`](../tests/smoke_test.py)） | 手元・Codespace・GitHub Actions | なし | 数分・無料 |
 | [`smoke_test.sh`](smoke_test.sh)（CLI の疎通） | Colab の CPU | Google アカウント | 約1分・無料枠で可 |
-| 推論と評価（`colab/start.sh infer`） | Colab の A100 | 有料の Colab プラン・`HF_TOKEN`・Drive の重み | 目標ファイル1本で約20分・約 1.4 CU |
+| 推論と評価（`colab/start.sh infer`） | Colab の A100 | 有料の Colab プラン・`HF_TOKEN`（重みは Hugging Face から）・Drive の `b3_dataset.tar` | 目標ファイル1本で約20分・約 1.4 CU |
 | 続きの学習（`colab/start.sh train`） | Colab の A100 | 同上 | 5,000 ステップで約1.5時間・約 9 CU |
 | 学習用の描画データを作り直す（`colab/go.sh data`） | Colab の A100 | 同上と、各自が AMASS から作った HumanML3D | 作者は不要（Drive にある） |
 
 - **A100 には有料の Colab プランが要ります。** A100 は約 5.3 CU/時です。無料枠の T4 では GR00T N1.7 を学習できません
   （flash-attn 2 が Ampere 以降を要求する）。L4 は未確認です。
 - 残高・消費の速さ・確保できる GPU は `colab-cli/tools/colab_ccu.py` で見られます（`colab/start.sh` が始める前に表示します）。
-- 重みは今のところ Google Drive の `MyDrive/VLA/VLA_1_0/` から読みます（[重み](../README.ja.md#重み)）。
+- 重みは Hugging Face から取ります（gated。`HF_TOKEN` のアカウントで利用条件に同意しておく）。
+  Drive に要るのは `data/b3_dataset.tar` と実行の出力だけです（[重み](../README.ja.md#重み)）。
 
 ## クラウドとローカルで違うところ
 

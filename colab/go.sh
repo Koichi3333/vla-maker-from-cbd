@@ -6,7 +6,9 @@
 #   ACTION_HEAD=runs/myrun/action_head.safetensors bash colab/go.sh infer <session name>
 #   bash colab/go.sh data <session name>         # rebuild the HumanML3D training data (colab/vm_data.sh)
 #
-# Variables passed to the VM (defaults at the top of colab/vm_*.sh): RUN STEPS DUP LR EVAL_GUIDES H1 ACTION_HEAD FK_ETA JOINTS
+#   WEIGHTS=drive bash colab/go.sh infer <session name>   # read checkpoint-47000 / arm H from Drive instead of Hugging Face
+#
+# Variables passed to the VM (defaults at the top of colab/vm_*.sh): RUN WEIGHTS STEPS DUP LR EVAL_GUIDES H1 ACTION_HEAD FK_ETA JOINTS
 set -euo pipefail
 source "$(dirname "$0")/common.sh"
 JOB=${1:?train・infer・data のどれか}; NAME=${2:?セッション名}
@@ -18,7 +20,7 @@ mount_drive_finish $NAME
 # Turn the variables for the VM into JSON (keeps values with spaces such as "none fk" intact)
 ENVS=$(DRIVE=$DRIVE RUN=$RUN python3 -c '
 import json, os
-keys = ["DRIVE", "RUN", "STEPS", "DUP", "LR", "EVAL_GUIDES", "H1", "ACTION_HEAD", "FK_ETA", "JOINTS"]
+keys = ["DRIVE", "RUN", "WEIGHTS", "STEPS", "DUP", "LR", "EVAL_GUIDES", "H1", "ACTION_HEAD", "FK_ETA", "JOINTS"]
 print(json.dumps({k: os.environ[k] for k in keys if os.environ.get(k)}))')
 
 # Hard local deadline: colab-cli 0.7.5 can hang after sending when the websocket connects late, ignoring --timeout
@@ -28,8 +30,19 @@ timeout -k 5 960 colab exec -s $NAME --timeout 900 <<PYEOF | tail -4 || LAUNCHED
 import json, os, subprocess, time
 ENV = json.loads(r"""$ENVS""")
 D = ENV["DRIVE"]
+W = ENV.get("WEIGHTS", "hf")
+assert W in ("hf", "drive"), f"WEIGHTS は hf か drive: {W!r}"
+if "$JOB" != "data" and W == "drive":
+    assert os.path.isdir(f"{D}/ckpt/checkpoint-47000"), "checkpoint-47000 が Drive に見えない（WEIGHTS=hf なら Hugging Face から取る）"
+if "$JOB" != "data" and W == "hf":
+    # Check access with one small file before a ~15 GB download: the repository is gated (accept its terms on HF first)
+    from huggingface_hub import hf_hub_download
+    try:
+        hf_hub_download("Koichi3333/vla-maker-from-cbd", "checkpoint-47000/config.json", token=os.environ.get("HF_TOKEN"))
+    except Exception as e:
+        raise SystemExit(f"Koichi3333/vla-maker-from-cbd を読めない（{type(e).__name__}）。HF_TOKEN のアカウントで "
+                         "https://huggingface.co/Koichi3333/vla-maker-from-cbd の条件に同意したか確かめる。Drive から読むなら WEIGHTS=drive")
 if "$JOB" != "data":
-    assert os.path.isdir(f"{D}/ckpt/checkpoint-47000"), "checkpoint-47000 が Drive に見えない"
     assert os.path.isfile(f"{D}/data/b3_dataset.tar"), "b3_dataset.tar（HumanML3D の描画済みデータ）が Drive に見えない。先に colab/go.sh data"
 for _ in range(90):
     if "SETUP_DONE" in open("/content/groot_setup.log").read(): break

@@ -143,6 +143,8 @@ def _render_one(job):
     obj = json.loads(pathlib.Path(objp).read_text()) if objp else None
     pos = object_track(obj["mode"], anchors(m, d, _W["hand"], q)) if obj else np.tile(AWAY, (len(q), 1))
     label = obj["label"] if obj else None
+    if label is not None and label not in PROXY:
+        print(f"  !! episode {ep}: no proxy shape for '{label}' (PROXY has {', '.join(PROXY)}); the object is not drawn")
     frames = [f.copy() for f in frames_with_object(m, d, _W["r"], _W["mocap"], q, pos, label)]
     encode(pathlib.Path(dst), iter(frames), _W["size"], fps)
     out = dict(ep=ep, T=len(q), lift=lift, label=label,

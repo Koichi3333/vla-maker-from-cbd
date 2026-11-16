@@ -7,7 +7,10 @@
   `objects/episode_XXXXXX.json` (GR00T's loader reads only data/ and meta/):
   `held_left` / `held_right` / `held_both` (phase is Grasp / Carry and the object is visible), `hidden` (flying away from the hand = `tracked_2d`),
   `rest` (everything else, including `hidden` shorter than 0.25 s). **No positions are stored.** The object is placed relative to the rendered hand (`render_with_objects.py`)
-  Clips from the CBD human-capture notebook have no `held_by`, so they get no object states (the object is not drawn)
+  Clips from the CBD notebooks (`demo_name` = human_behavior_demo_2_0) go through `notebook_modes`: the primary object's `held_by`
+  when the notebook wrote it (since 2026-11), else the per-frame `phase` and `hand` (older zips): Grasp / Carry, and Hold / Toss /
+  Catch from a toss-and-catch variant, are held in that hand. Flight is `hidden`, everything else `rest`. A clip with no held frame
+  gets no object states (not drawn)
 - **Clips that fail the quality gate are left out**: `overall_quality == "fail"`, or for the notebook's numeric quality, `pose_coverage`
   below `--min-pose-coverage` (`overall_quality` averages in the face, which the body does not need; frames without a pose become the T-pose).
   The external example (`sample`) is left out too (the subject's consent is unknown)
@@ -173,6 +176,61 @@ def object_modes(frames, fps, gap_sec=0.5):
     return out
 
 
+# Notebook phases (CBD human-capture): which mean "in the hand" and which mean "in the air"
+NOTEBOOK_DEMO = "human_behavior_demo_2_0"     # manifest demo_name of both CBD notebooks (the author's pipeline used the clip name)
+NOTEBOOK_HELD = {"Grasp", "Carry", "Hold", "Toss", "Catch"}
+NOTEBOOK_AIR = {"Flight"}
+# Detector (COCO) names the notebook uses -> the proxy shapes render_with_objects.py knows (PROXY there)
+PROXY_LABEL = {"sports ball": "ball", "cell phone": "phone", "wine glass": "cup"}
+
+
+def primary_entry(f):
+    """The primary object of one notebook frame: the generator's `primary_object` block (every frame), else the
+    `objects[]` entry flagged `is_primary` or carrying the primary-only fields (absent on frames the track is invalid)."""
+    if f.get("primary_object"):
+        return f["primary_object"]
+    return next((o for o in f.get("objects") or []
+                 if o.get("is_primary") or "held_by" in o or "position_source" in o), None)
+
+
+def notebook_modes(frames):
+    """Per-frame object states for notebook clips.
+
+    `held_by` ("left" / "right" / None) on the primary object when present; otherwise `phase` = {"phase", "hand"}.
+    The notebook's state machine already keeps "held" through occlusions, so no gap filling here.
+    Returns None when no frame is held (e.g. an all-Idle clip without a primary object): nothing to draw.
+    """
+    out = []
+    for f in frames:
+        p = f.get("phase") or {}
+        po = primary_entry(f)
+        if po is not None and "held_by" in po:
+            hand = po["held_by"] or ""
+            held = hand in ("left", "right", "both")
+        else:
+            hand = str(p.get("hand", "")).lower()
+            held = p.get("phase") in NOTEBOOK_HELD and hand in ("left", "right")
+        if held:
+            out.append(f"held_{hand}")
+        elif p.get("phase") in NOTEBOOK_AIR:
+            out.append("hidden")
+        else:
+            out.append("rest")
+    return out if any(m.startswith("held_") for m in out) else None
+
+
+def primary_label(frames):
+    """The notebook's primary object (`primary_object`, else the object flagged `is_primary`), else the first object,
+    named as render_with_objects.py's proxy shape when there is one (`sports ball` -> `ball`)."""
+    label = next((f["objects"][0]["label"] for f in frames if f.get("objects")), None)
+    for f in frames:
+        po = primary_entry(f)
+        if po and po.get("label"):
+            label = po["label"]
+            break
+    return PROXY_LABEL.get(label, label)
+
+
 def drop_short_hidden(mode, fps, min_sec=0.25):
     """Turn `hidden` stretches shorter than `min_sec` back into `rest`.
 
@@ -195,7 +253,9 @@ def drop_short_hidden(mode, fps, min_sec=0.25):
 
 def load(d, fps_out):
     frames = [json.loads(line) for line in (d / "timeline" / "frames.jsonl").read_text().splitlines()]
-    fps_in = json.loads((d / "manifest.json").read_text())["fps"]
+    manifest = json.loads((d / "manifest.json").read_text())
+    fps_in = manifest["fps"]
+    notebook = manifest.get("demo_name") == NOTEBOOK_DEMO
     Q = []
     for f in frames:
         r = f["human"]["bone_rotations_xyzw"]
@@ -208,11 +268,15 @@ def load(d, fps_out):
     i1 = (i0 + 1).clip(0, T_in - 1)
     w = np.broadcast_to((t - i0)[:, None], (n, len(BONES)))
     Qo = slerp(Q[i0], Q[i1], w)
-    obj = None
-    if frames[0].get("objects") and "held_by" in frames[0]["objects"][0]:
-        modes = object_modes(frames, fps_in)
+    obj, modes = None, None
+    if notebook:                                                                  # the CBD notebooks
+        modes = notebook_modes(frames) if any(f.get("objects") for f in frames) else None
+        label = primary_label(frames) if modes else None
+    elif frames[0].get("objects") and "held_by" in frames[0]["objects"][0]:     # the author's pipeline
+        modes, label = object_modes(frames, fps_in), frames[0]["objects"][0]["label"]
+    if modes:
         near = np.rint(t).astype(int).clip(0, T_in - 1)
-        obj = dict(label=frames[0]["objects"][0]["label"], mode=drop_short_hidden([modes[k] for k in near], fps_out))
+        obj = dict(label=label, mode=drop_short_hidden([modes[k] for k in near], fps_out))
     return Qo, obj, fps_in, T_in
 
 

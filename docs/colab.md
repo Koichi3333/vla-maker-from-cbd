@@ -18,7 +18,7 @@ colab-cli/smoke_test.sh   # CPU VM for ~1 min: new → exec → download → sto
 - **Re-run `setup.sh` instead of `uv tool upgrade google-colab-cli`.** The scripts here were checked against the
   pinned version. 0.7.x pins its own `jupyter-kernel-client`; on 0.6.x, `jupyter-kernel-client` 1.0 renamed
   `KernelClient` and `colab exec` failed with an `AttributeError`, so that version needed `<1.0`.
-- The Hugging Face token (`HF_TOKEN`, needed for GR00T's gated Cosmos backbone) is passed by
+- The Hugging Face token (`HF_TOKEN`, needed for GR00T's gated Cosmos backbone and for this project's gated weights) is passed by
   `colab-cli/tools/colab_secrets.py` through a temporary file, from the environment, `colab-cli/.env` or a
   Codespaces secret. **Never put secrets in `colab exec` code.** The CLI logs executed code and output in plain
   text under `~/.config/colab-cli/history/`.
@@ -64,7 +64,8 @@ to Drive (`runs/<RUN>/live/`) every minute, so you can still diagnose a run whos
 
 - an environment from `colab/setup_vm.sh` in `/content/Isaac-GR00T`;
 - code and data in `/content/vla`;
-- the Drive layout under `$DRIVE`: `ckpt/checkpoint-47000/`, `data/b3_dataset.tar`, action heads.
+- the Drive layout under `$DRIVE`: `data/b3_dataset.tar`, and `runs/` for output (with `WEIGHTS=drive`, also
+  `ckpt/checkpoint-47000/` and action heads; by default `colab/vm_fetch_base.py` downloads those from Hugging Face).
 
 On a machine with an A100, run `setup_vm.sh`, put the files in place, set `DRIVE` to a local directory, and run
 the job script. You do not need `start.sh` and `go.sh` at all. A port like that is a welcome contribution.

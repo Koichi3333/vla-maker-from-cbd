@@ -9,7 +9,10 @@
 set -euo pipefail
 DRIVE=${DRIVE:?DRIVE を渡すこと}
 RUN=${RUN:?RUN を渡すこと}
-ACTION_HEAD=${ACTION_HEAD:-v12e/action_head_bf16_v12e_armH.safetensors}   # Path relative to $DRIVE in Drive. Default is arm H (the usable form)
+WEIGHTS=${WEIGHTS:-hf}            # hf = checkpoint-47000 from Hugging Face (gated; HF_TOKEN), drive = from $DRIVE/ckpt/
+# Action head: a path relative to $DRIVE in Drive (e.g. runs/myrun/action_head.safetensors). Default is arm H (the usable form),
+# from Hugging Face with WEIGHTS=hf and from Drive v12e/ with WEIGHTS=drive
+if [ -z "${ACTION_HEAD:-}" ]; then [ $WEIGHTS = hf ] && ACTION_HEAD=hf || ACTION_HEAD=v12e/action_head_bf16_v12e_armH.safetensors; fi
 FK_ETA=${FK_ETA:-0.3}
 V=/content/vla; G=$V/vla; B=/content/b3; W=/content/run
 OUT=$DRIVE/runs/$RUN
@@ -46,19 +49,7 @@ if [ ! -d $B/heldout ]; then
 fi
 echo VLA_DATA_OK; t data
 
-python3 - <<PY
-import pathlib, shutil, time
-src, dst = pathlib.Path("$DRIVE/ckpt/checkpoint-47000"), pathlib.Path("$W/base")
-t0 = time.time()
-for p in sorted(src.rglob("*")):
-    if p.is_dir() or p.name in ("optimizer.pt", "scheduler.pt") or p.name.startswith("rng_state"):
-        continue
-    q = dst / p.relative_to(src)
-    q.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy(p, q)
-shutil.copy("$DRIVE/$ACTION_HEAD", "$W/action_head.safetensors")
-print(f"[base] checkpoint-47000 と $ACTION_HEAD を {time.time() - t0:.0f} 秒でコピー")
-PY
+python3 $V/colab/vm_fetch_base.py --source $WEIGHTS --drive $DRIVE --action-head "$ACTION_HEAD" --out $W
 echo VLA_BASE_OK; t base
 
 for S in $V/data/goals/*.json; do

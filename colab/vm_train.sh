@@ -10,6 +10,7 @@
 set -euo pipefail
 DRIVE=${DRIVE:?DRIVE を渡すこと}
 RUN=${RUN:?RUN を渡すこと}
+WEIGHTS=${WEIGHTS:-hf}            # hf = checkpoint-47000 from Hugging Face (gated; HF_TOKEN), drive = from $DRIVE/ckpt/
 STEPS=${STEPS:-5000}
 LR=${LR:-3e-5}
 DUP=${DUP:-40}                    # Copies of the video data. 40 makes about 50% of training frames video (arm H); 2 makes about 5%
@@ -71,18 +72,7 @@ fi
 echo VLA_DATA_OK; t data
 
 # ---------------------------------------------------------------- 4. Starting point checkpoint-47000 (without optimizer etc.)
-python3 - <<PY
-import pathlib, shutil, time
-src, dst = pathlib.Path("$DRIVE/ckpt/checkpoint-47000"), pathlib.Path("$W/base")
-t0 = time.time()
-for p in sorted(src.rglob("*")):
-    if p.is_dir() or p.name in ("optimizer.pt", "scheduler.pt") or p.name.startswith("rng_state"):
-        continue
-    q = dst / p.relative_to(src)
-    q.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy(p, q)
-print(f"[base] checkpoint-47000 を {time.time() - t0:.0f} 秒でコピー")
-PY
+python3 $V/colab/vm_fetch_base.py --source $WEIGHTS --drive $DRIVE --out $W
 echo VLA_BASE_OK; t base
 
 # ---------------------------------------------------------------- 5. Mix (normalization statistics stay those of HumanML3D train)

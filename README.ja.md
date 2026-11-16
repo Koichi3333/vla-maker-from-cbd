@@ -143,7 +143,7 @@ GR00T N1.7 の学習と評価は Google Colab の A100 で動き、その VM の
   colab-cli/setup.sh        最初に1回
   colab-cli/auth.sh         最初に1回  ──────────►  Google アカウントでログイン
   colab/start.sh infer x               ──────────►  A100 を確保し、コードを送り、GR00T の環境を作る
-  （ブラウザで Drive に同意）           ──────────►  Drive から重みを読む
+  （ブラウザで Drive に同意）           ──────────►  重みは Hugging Face、データは Drive から読む
   colab/go.sh infer x                  ──────────►  評価（または学習）を切り離して実行
   colab download                       ◄──────────  結果をファイルで受け取る
   colab stop                           ──────────►  VM を解放
@@ -204,8 +204,9 @@ MUJOCO_GL=osmesa python3 tests/smoke_test.py rollout vlm   # 目標を VLM の�
 
 - A100 が使える Colab の契約
 - `colab-cli/setup.sh` と `colab-cli/auth.sh` で入れてログインした Colab CLI（[上](#gpu-マシンが無くても動かせる--ターミナルから-colab-へ)）
-- `nvidia/GR00T-N1.7-3B` を取れる Hugging Face のトークン（`HF_TOKEN`。Codespaces の Secret か、使い捨てなら `python3 colab-cli/tools/colab_secrets.py --set HF_TOKEN`。`colab/start.sh` が VM へ渡す。[詳細](colab-cli/README.ja.md#hf_token-を使い捨てにする)）
-- Google Drive に置いた重み（[重み](#重み)）
+- `nvidia/GR00T-N1.7-3B` と[この重み](#重み)の利用条件に同意したアカウントの Hugging Face のトークン（`HF_TOKEN`。Codespaces の Secret か、使い捨てなら `python3 colab-cli/tools/colab_secrets.py --set HF_TOKEN`。`colab/start.sh` が VM へ渡す。[詳細](colab-cli/README.ja.md#hf_token-を使い捨てにする)）
+- Google Drive に置いた `data/b3_dataset.tar`（HumanML3D の描画済みデータ）。AMASS 由来のデータは再配布できないので、
+  各自が AMASS から `colab/go.sh data` で作る（[docs/data.ja.md](docs/data.ja.md)）
 
 ```bash
 bash colab/start.sh infer myrun        # A100 のセッションを作り、コードを送り、Drive の同意 URL で止まる
@@ -236,7 +237,7 @@ ACTION_HEAD=runs/t1/action_head.safetensors bash colab/go.sh infer ...   # 学�
 3. `python3 vla/video_to_lerobot.py --cbd-dir work/my_clips --out work/my_video` を実行する。117 次元の LeRobot データが書かれ、外した clip とその理由が表示される。理由は、キャプションが無い（`--caption "IMG_0001=a person waves."` で足す）か、骨格を捉えられたフレームが 90% 未満（`--min-pose-coverage`）のどちらか。
 4. `VIDEO_DATA=work/my_video bash colab/start.sh train ...` で学習する。
 
-ノートブックの出力にはどちらの手が物を持っているかの情報が無いので、これらの clip には物の状態が付かず、キャプションに物が出てきても描画した動画に物は映りません。展開した `source/` には元の動画が入っています。変換では読まないので、誤ってコミットや共有をしないでください。
+物の状態は、ノートブックが主たる物に書く持ち手（`held_by`）から作ります。それより前に作った zip では、フレームごとの phase とどちらの手か（hand）から作ります。Grasp / Carry（トスでは Hold / Toss / Catch）なら主たる物をその手に持たせ、Flight なら物を隠します。物は簡単な形（ボール・カップ・ボトル・ボウル・本・スマホ）で描き、それ以外の種類の物は描きません。一度も持たない clip には物が付きません。展開した `source/` には元の動画が入っています。変換では読まないので、誤ってコミットや共有をしないでください。
 
 mocap など、ほかの出所の CBD も同じように `vla/cbd_to_lerobot.py` を通せます。
 
@@ -265,9 +266,10 @@ mocap など、ほかの出所の CBD も同じように `vla/cbd_to_lerobot.py`
 Hugging Face の **[Koichi3333/vla-maker-from-cbd](https://huggingface.co/Koichi3333/vla-maker-from-cbd)** で公開しています。
 取るには、Hugging Face にログインして、下の利用条件（非商用の研究・評価に限る）に同意する必要があります（gated）。
 
-Colab のスクリプトは、今はまだ Google Drive の `MyDrive/VLA/VLA_1_0/` から重みを読みます
-（`ckpt/checkpoint-47000/`、`v12e/…armH.safetensors`、`data/b3_dataset.tar`。置き場所は `DRIVE=` で変えられる）。
-Hugging Face から読むように切り替える予定です。
+Colab のスクリプトは、`HF_TOKEN` を使ってここから 2 つとも取ります（`colab/vm_fetch_base.py`）。Drive に写しは要りません。
+約 15 GB を落とす前に、`colab/go.sh` が小さなファイル 1 つで読めるかを確かめます。`WEIGHTS=drive` にすると、従来どおり
+Drive の `MyDrive/VLA/VLA_1_0/` から読みます（`ckpt/checkpoint-47000/`、`v12e/…armH.safetensors`。置き場所は `DRIVE=` で変えられる）。
+自分で学習した action head（`ACTION_HEAD=runs/<run>/action_head.safetensors`）と `data/b3_dataset.tar` は、常に Drive から読みます。
 
 - Drive から Hugging Face へ上げ直す: `colab/hf_upload.sh`（モデルカードは `hf/README.md`）
 - 学習用の描画データ `b3_dataset.tar` を作り直す: `colab/go.sh data`。元になる HumanML3D は、各自が AMASS から作る（[docs/data.ja.md](docs/data.ja.md)）

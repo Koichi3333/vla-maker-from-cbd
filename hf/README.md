@@ -81,8 +81,9 @@ MUJOCO_GL=egl python vla/groot_eval.py --ckpt weights/checkpoint-47000 \
     --guide fk --fk-eta 0.3 --out work/eval
 ```
 
-The Colab scripts in the code repository (`colab/start.sh infer`) currently read these weights from Google
-Drive; switching them to this repository is planned.
+The Colab scripts in the code repository (`colab/start.sh infer`) download these weights from this repository
+with your `HF_TOKEN` (accept the terms above with that account first). Only the rendered HumanML3D data
+(`b3_dataset.tar`, built from AMASS by each user) is read from Google Drive.
 
 ## Results
 

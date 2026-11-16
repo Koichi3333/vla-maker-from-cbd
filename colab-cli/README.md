@@ -32,7 +32,7 @@ The free Colab tier covers everything up to here.
 |---|---|---|---|
 | CPU smoke test ([`tests/smoke_test.py`](../tests/smoke_test.py)) | your machine, a Codespace, GitHub Actions | nothing | minutes, free |
 | [`smoke_test.sh`](smoke_test.sh) (the CLI end to end) | a Colab CPU runtime | a Google account | ~1 min, free tier |
-| Inference and evaluation (`colab/start.sh infer`) | a Colab A100 | a paid Colab plan, `HF_TOKEN`, the weights in Drive | ~20 min and ~1.4 CU per goal file |
+| Inference and evaluation (`colab/start.sh infer`) | a Colab A100 | a paid Colab plan, `HF_TOKEN` (weights come from Hugging Face), `b3_dataset.tar` in Drive | ~20 min and ~1.4 CU per goal file |
 | Continued training (`colab/start.sh train`) | a Colab A100 | the same | ~1.5 h and ~9 CU for 5,000 steps |
 | Rebuild the rendered training data (`colab/go.sh data`) | a Colab A100 | the same, plus HumanML3D built from AMASS yourself | the author need not (it is in Drive) |
 
@@ -40,7 +40,8 @@ The free Colab tier covers everything up to here.
   (flash-attn 2 needs Ampere or newer). L4 is untested.
 - `colab-cli/tools/colab_ccu.py` shows your balance, the current burn rate and the GPUs you can get
   (`colab/start.sh` prints it before it starts).
-- The weights are read from `MyDrive/VLA/VLA_1_0/` in Google Drive for now ([Weights](../README.md#weights)).
+- The weights are downloaded from Hugging Face (gated: accept the terms with the account of your `HF_TOKEN`).
+  Drive holds only `data/b3_dataset.tar` and the run output ([Weights](../README.md#weights)).
 
 ## Cloud or local: what differs
 
