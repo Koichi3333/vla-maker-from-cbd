@@ -155,6 +155,10 @@ VLA のジョブそのもの（`start.sh`・`go.sh`・`vm_*.sh`・`watch.sh`・`
   A100 の確保は2回 `503 Service Unavailable` で断られ、30分後の3回目で取れた。展開の `colab exec` が固まり、手で流し直した
   （その後、`start.sh` の展開の段と `colab_secrets.py` と `smoke_test.sh` にも締切とやり直しを入れた。
   最初の `exec` だけ固まる偽の `colab` で、打ち切ってやり直す・止めるところまでは確かめたが、本物の固まりではまだ通していない）。
+- **重みを Hugging Face から取る形（2026-11-19、Codespace 上）:** 既定の `WEIGHTS=hf` で `colab/start.sh infer` → 同意 →
+  `colab/go.sh infer`。`checkpoint-47000` と arm H を使い捨ての `HF_TOKEN` で `Koichi3333/vla-maker-from-cbd` から取り（73 秒）、
+  `VLA_DONE`・`VLA_EXIT=0`、`autostop.sh` が回収と停止まで行った。評価の要約は、Drive から読んだ 2026-11-09 の実行と完全に同じ。
+  A100 は1回 `503` で断られ、5分後に取れた。約 1.9 CU。
 - **まだ確かめていないこと:**
   - 学習（`train`）を移した後に流すこと。
   - まっさらな環境での `setup.sh` と、初回の `auth.sh`（CBD 側では 0.7.5 で通っている）。

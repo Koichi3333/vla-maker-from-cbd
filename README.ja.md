@@ -180,6 +180,7 @@ colab-cli/smoke_test.sh   # CPU の VM を起動 → 実行 → ファイル回�
 
 実際にこの方法で動かしたもの: Codespace 上の `google-colab-cli` 0.7.5 で、A100 での 500 ステップの学習と評価 2 本を
 最後まで（2026-11-05）。道具を `colab-cli/` にまとめた後も、`smoke_test.sh` と A100 での評価 1 本が通りました（2026-11-09。数字は「いまできること」の表と同じ）。
+重みを Drive ではなく Hugging Face から取る形（`WEIGHTS=hf`、既定）でも、A100 での評価 1 本が同じ数字で通りました（2026-11-19）。
 詳細: [`colab-cli/README.ja.md`](colab-cli/README.ja.md#状態--何を動かし何をまだ動かしていないか)
 
 ## はじめかた

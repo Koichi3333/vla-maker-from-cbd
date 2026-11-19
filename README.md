@@ -180,7 +180,8 @@ Then [run the usable form on Colab](#2-run-the-usable-form-on-colab) or [continu
 
 What has actually run this way: on `google-colab-cli` 0.7.5 in a Codespace, 500 training steps and two evaluations
 on an A100, end to end (2026-11-05). Since the tools moved into `colab-cli/`, `smoke_test.sh` and one A100
-evaluation have passed too (2026-11-09; same numbers as the table above). Full status:
+evaluation have passed too (2026-11-09; same numbers as the table above). With the weights downloaded from Hugging
+Face instead of Drive (`WEIGHTS=hf`, the default), one A100 evaluation gave the same numbers again (2026-11-19). Full status:
 [`colab-cli/README.md`](colab-cli/README.md#status--what-has-and-has-not-been-run).
 
 ## Quick start

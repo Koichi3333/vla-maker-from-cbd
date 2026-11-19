@@ -159,6 +159,11 @@ The VLA jobs themselves (`start.sh`, `go.sh`, `vm_*.sh`, `watch.sh`, `autostop.s
   later. The extract `colab exec` hung and was re-run by hand (the extract step of `start.sh` now has `timeout` and
   retries, and so do `colab_secrets.py` and `smoke_test.sh`; a fake `colab` whose first `exec` hangs showed them giving
   up, retrying and stopping, but a real hang has not been through them yet).
+- **Weights from Hugging Face (2026-11-19, in a Codespace):** `colab/start.sh infer` → consent → `colab/go.sh infer`
+  with the default `WEIGHTS=hf`. `checkpoint-47000` and arm H came from `Koichi3333/vla-maker-from-cbd` with a
+  short-lived `HF_TOKEN` (73 s), and the run ended in `VLA_DONE` and `VLA_EXIT=0`, collected and stopped by
+  `autostop.sh`. The evaluation summary was identical to the 2026-11-09 run that read the weights from Drive.
+  The A100 was refused once with `503` and granted five minutes later. About 1.9 CU.
 - **Not checked yet:**
   - Training (`train`) after the move.
   - `setup.sh` on a clean machine and a first `auth.sh` sign-in (both passed on 0.7.5 on the CBD side).
