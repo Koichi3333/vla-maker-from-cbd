@@ -15,6 +15,8 @@ extra_gated_fields:
   Affiliation: text
 extra_gated_button_content: Agree and access
 base_model: nvidia/GR00T-N1.7-3B
+datasets:
+  - Koichi3333/vla-maker-from-cbd-data
 pipeline_tag: robotics
 tags:
   - robotics
@@ -28,13 +30,25 @@ tags:
 
 # vla-maker-from-cbd: GR00T N1.7 fine-tuned on Common Behavior Data
 
+<img src="https://raw.githubusercontent.com/Koichi3333/vla-maker-from-cbd/main/docs/media/hero_video_to_vla.gif" width="544" alt="Left: a person on a chair reaches for a glass on a table and drinks, with the tracked skeleton overlaid. Right: the simulated humanoid driven by this model reaches for a magenta glass and brings it to its mouth">
+
+*Left: an ordinary video turned into body-motion data (CBD); a sample from Common Behavior Data, not in the training
+data. Right: this model, told "a seated person picks up a glass from the table, drinks from it, and puts it back".
+Kinematic MuJoCo (no forces), no fingers. Until the hand reaches the glass an outside planner guides it; the lift to the
+mouth comes from the model. One of 12 trials of this scene; in the other 11 the glass stops at chin height or below.*
+
 A humanoid vision-language-action model whose action space is **Common Behavior Data (CBD)**, an open,
 embodiment-independent behavior format (19 bone rotations + root motion, 117 numbers per frame).
 Because the output is CBD, it can be retargeted to MuJoCo, a Unitree G1 or a VRM avatar with the CBD
 adapters, without retraining per body.
 
+<a href="https://github.com/Koichi3333/common-behavior-data/blob/main/docs/media/CBD_Technical_Concept_Deck.pdf"><img src="https://raw.githubusercontent.com/Koichi3333/vla-maker-from-cbd/main/docs/media/cbd_concept_deck.png" width="640" alt="Common Behavior Data technical concept: Motion + Gap, adapting to different bodies. CBD holds behavior on a shared timeline; each adapter fits a new body and records the differences that remain."></a>
+
+*The CBD concept in one page ([PDF](https://github.com/Koichi3333/common-behavior-data/blob/main/docs/media/CBD_Technical_Concept_Deck.pdf)).*
+
 - Code, training and evaluation: **[vla-maker-from-cbd](https://github.com/Koichi3333/vla-maker-from-cbd)**
 - Data format: [common-behavior-data](https://github.com/Koichi3333/common-behavior-data)
+- Part of the training data (647 synthetic episodes, LeRobot format): [Koichi3333/vla-maker-from-cbd-data](https://huggingface.co/datasets/Koichi3333/vla-maker-from-cbd-data)
 
 > **Research preview.** All evaluation is kinematic simulation (MuJoCo). No physics, no real robot.
 > **Non-commercial research or evaluation use only** (see [License and terms](#license-and-terms)).

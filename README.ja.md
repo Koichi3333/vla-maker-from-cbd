@@ -41,6 +41,10 @@
 モデルが出す動きは、ロボットの関節の角度ではなく、**CBD の骨の回転そのもの**です（19 本の骨と腰の位置で、1 フレーム 117 個の数）。
 そのため、MuJoCo の人型・Unitree G1・VRM のアバターのどれに載せるときも、**体ごとに学習し直す必要がありません**。
 
+<a href="https://github.com/Koichi3333/common-behavior-data/blob/main/docs/media/CBD_Technical_Concept_Deck.pdf"><img src="docs/media/cbd_concept_deck.png" width="640" alt="Common Behavior Data technical concept: Motion + Gap, adapting to different bodies. CBD holds behavior on a shared timeline; each adapter fits a new body and records the differences that remain."></a>
+
+*CBD の考え方を 1 枚にまとめたもの（[PDF](https://github.com/Koichi3333/common-behavior-data/blob/main/docs/media/CBD_Technical_Concept_Deck.pdf)、英語）。*
+
 > **状態: 研究段階のプレビュー。一緒に進める人を探しています。** 最初から最後まで一通り動き、下の数字はすべて実測です。
 > 難しい問題がいくつか残っていて、[下に](#手伝ってほしいこと)あえてそのまま並べています。
 
@@ -255,6 +259,7 @@ mocap など、ほかの出所の CBD も同じように `vla/cbd_to_lerobot.py`
 | `tools/` | Hugging Face のメタデータ・README の GIF |
 | `tests/smoke_test.py` | 上の CPU の通しテスト |
 | `hf/README.md` | Hugging Face のリポジトリのモデルカード |
+| `hf_dataset/README.md` | Hugging Face のデータセット（合成 647 本。`tools/make_hf_dataset.py` で作る）のカード |
 | `docs/` | 結果・学習データと規約（`data.ja.md`）・Colab の運用・メディア |
 
 ## 重み

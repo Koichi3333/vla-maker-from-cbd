@@ -88,8 +88,19 @@ def build(src, out, keep):
                        source="Rollouts of an earlier model (arm B + inference-time guidance). No recording of a person is included.",
                        captions="English sentences for the scene each rollout was started from",
                        license_note="Non-commercial research or evaluation only. The clips the rollouts started from had their torso "
-                                    "fitted with SMPL; neither the SMPL model nor AMASS data is included. See docs/data.md.")
+                                    "fitted with SMPL; neither the SMPL model nor AMASS data is included. See docs/data.md.",
+                       # the three notes below are in Japanese in data/video_reach (the file the training run read); English here
+                       root_translation="Fixed at 0: a video cannot recover motion through the world.",
+                       objects="Not in state or action. Per-frame object state only, in objects/episode_XXXXXX.json "
+                               "(rest, held_left, held_right, held_both, hidden; no positions). The renderer places the object "
+                               "relative to the drawn hand (vla/render_with_objects.py in the GitHub repository).",
+                       synthetic="Model-generated, not measured: closed-loop rollouts of an earlier model (arm B) with "
+                                 "inference-time guidance. Per-episode condition, side, and the frame at which the object was "
+                                 "attached are under `synthetic` in meta/episodes.jsonl.",
+                       video_pattern="render_with_objects (no video is included here; render it from the state with "
+                                     "vla/render_with_objects.py)")
     info["cbd"].pop("synthetic_source", None)
+    assert all(ord(c) < 128 for c in json.dumps(info, ensure_ascii=False)), "non-English text left in meta/info.json"
     json.dump(info, open(out / "meta/info.json", "w"), indent=1, ensure_ascii=False)
     json.dump({"train": list(range(len(new_eps))), "heldout": []}, open(out / "meta/split.json", "w"))
     synth = json.load(open(src / "meta/synth_report.json"))

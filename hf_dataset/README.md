@@ -26,10 +26,27 @@ size_categories:
 
 # vla-maker-from-cbd: synthetic reaching clips (CBD, LeRobot format)
 
+<img src="https://raw.githubusercontent.com/Koichi3333/vla-maker-from-cbd/main/docs/media/hero_video_to_vla.gif" width="544" alt="Left: a person on a chair reaches for a glass on a table and drinks, with the tracked skeleton overlaid. Right: the simulated humanoid driven by the VLA reaches for a magenta glass and brings it to its mouth">
+
+*Left: an ordinary video turned into body-motion data (CBD); a sample from Common Behavior Data, not in the training
+data. Right: the VLA trained on this dataset and more, told "a seated person picks up a glass from the table, drinks
+from it, and puts it back". Kinematic MuJoCo (no forces), no fingers. Until the hand reaches the glass an outside
+planner guides it; the lift to the mouth comes from the model. One of 12 trials of this scene; in the other 11 the
+glass stops at chin height or below. The clips in this dataset themselves are shorter: reaching, then about 1 s held.*
+
 **647 episodes, 35,128 frames, 20 fps.** Short reaching and object-handling motions of a humanoid, as CBD bone rotations in
 the LeRobot v2.0 layout. They are part of the data used to train the model in
 [Koichi3333/vla-maker-from-cbd](https://huggingface.co/Koichi3333/vla-maker-from-cbd). We cannot claim
 that the model reaches objects precisely without inference-time guidance.
+
+**CBD** ([Common Behavior Data](https://github.com/Koichi3333/common-behavior-data)) is an open format that records
+human motion as bone rotations (19 bones plus the hip position), independent of any particular body. The same episode
+can be put on a MuJoCo humanoid, a Unitree G1 or a VRM avatar without retraining for each body. Code, training and
+evaluation: [GitHub](https://github.com/Koichi3333/vla-maker-from-cbd).
+
+<a href="https://github.com/Koichi3333/common-behavior-data/blob/main/docs/media/CBD_Technical_Concept_Deck.pdf"><img src="https://raw.githubusercontent.com/Koichi3333/vla-maker-from-cbd/main/docs/media/cbd_concept_deck.png" width="640" alt="Common Behavior Data technical concept: Motion + Gap, adapting to different bodies. CBD holds behavior on a shared timeline; each adapter fits a new body and records the differences that remain."></a>
+
+*The CBD concept in one page ([PDF](https://github.com/Koichi3333/common-behavior-data/blob/main/docs/media/CBD_Technical_Concept_Deck.pdf)).*
 
 > **Non-commercial research or evaluation use only.** Gated: you agree to this when you request access.
 

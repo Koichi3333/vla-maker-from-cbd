@@ -41,6 +41,10 @@ The model does not output a robot's joint angles. It outputs **CBD bone rotation
 117 numbers per frame). So putting the motion on a MuJoCo humanoid, a Unitree G1 or a VRM avatar
 **needs no retraining for each body**.
 
+<a href="https://github.com/Koichi3333/common-behavior-data/blob/main/docs/media/CBD_Technical_Concept_Deck.pdf"><img src="docs/media/cbd_concept_deck.png" width="640" alt="Common Behavior Data technical concept: Motion + Gap, adapting to different bodies. CBD holds behavior on a shared timeline; each adapter fits a new body and records the differences that remain."></a>
+
+*The CBD concept in one page ([PDF](https://github.com/Koichi3333/common-behavior-data/blob/main/docs/media/CBD_Technical_Concept_Deck.pdf)).*
+
 > **Status: research preview, looking for collaborators.** Everything runs end to end, and every number below is measured.
 > Several hard problems are still open, and they are listed [below](#help-wanted) on purpose.
 
@@ -266,6 +270,7 @@ Mocap or any other CBD source goes through `vla/cbd_to_lerobot.py` the same way.
 | `tools/` | Hugging Face metadata, the README GIFs |
 | `tests/smoke_test.py` | The CPU smoke test above |
 | `hf/README.md` | Model card of the Hugging Face repository |
+| `hf_dataset/README.md` | Dataset card of the Hugging Face dataset (the 647 synthetic clips; built with `tools/make_hf_dataset.py`) |
 | `docs/` | Results, training data and its terms (`data.md`), Colab operations, media |
 
 ## Weights
